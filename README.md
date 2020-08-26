@@ -1,34 +1,61 @@
-# AElf-boilerplate - A framework for smart contract and dApp development
+# Read-me
 
-BRANCH | AZURE PIPELINES(chain) | AZURE PIPELINES(ios) | AZURE PIPELINES(android)
--------|------------------------|----------------------|-------------------------
-MASTER |[![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate?branchName=master)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=7&branchName=master) | [![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate%5Bcreate-release%5D?branchName=master)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=12&branchName=master) | [![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate%5Bcreate-release%5D?branchName=master)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=12&branchName=master)
-DEV    |[![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate?branchName=dev)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=7&branchName=dev) | [![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate%5Bcreate-release%5D?branchName=dev)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=12&branchName=dev) | [![Build Status](https://dev.azure.com/AElfProject/aelf-boilerplate/_apis/build/status/AElfProject.aelf-boilerplate%5Bcreate-release%5D?branchName=dev)](https://dev.azure.com/AElfProject/aelf-boilerplate/_build/latest?definitionId=12&branchName=dev)
+​    本团队拟利用aelf区块链实现存证。
 
-Welcome to AElf Boilerplate's official GitHub repo !
+ 1. 程序架构
 
-Boilerplate is an environment that is used to develop smart contracts and dApps. Boilerplate shares some code with AElf and internally runs an AElf node.
+    - 综述：本系统初步需要实现存证上链和存证转移的核心功能，之后实现存证的验证（即文件比对）。为更好实现功能，需要额外添加注册和登录功能（暂时不加入设计）。
+    - 存证上链（CR_Upload）：
+      - 输入为内容信息、作者信息、时间戳和属性参数（默认为原创作者，无上一次交易，持有状态为版权持有人）
+      - 输出为结果信息（布尔值），如果成功则为真，否则为假。
 
-## Getting Started
+    - 存证转移（CR_Transfer）：
+      - 输入为代表版权持有的交易ID、交易对方的地址、时间戳和属性参数（默认为非原创人，有上一次交易，持有状态为版权持有人）。
+      - 输出为结果信息（布尔值），如果成功则为真，否则为假。
+    - 存证验证（CR_Confirm）尚未设计完成。
+    - 登录（Sign_In）与注册（Sign_Up）尚不需要设计。
 
-You can follow the tutorials [**here**](https://docs.aelf.io/main/main-1) that will get you started with contract development on Boilerplate. This tutorial also will guide you through the needed dependencies.
+	2. 存储架构
 
-## Boilerplate
+    - 综述：本系统参考了比特币的UTXO模型，将所有的存证以交易的形式存在于链上。
 
-At the top level this repo contains two folders: **chain** and **web**. The chain folder contains code to facilitate contract development whereas the web folder contains the front end part of the dApp.
+    - 交易内容：
 
-## chain
+      - 每一笔交易中必然包含他所使用的智能合约，相关参数均存储于智能合约中。
 
-The process for developing the smart contract goes somewhat like this: define the smart contract, generate the code from the definition, implement the logic by using the generated code, test it and then deploy it.
+      - 交易分两种：初始交易和授权/转让交易
 
-The chain folder contains four sub-folders:
-- **contract**: the implementation of the contract.
-- **protobuf**: the definition of the contract.
-- **test**: the unit tests of the contract.
-- **src**: Boilerplate's core code, some elements need changing in here for the contract to be deployed.
+        > 初始交易所使用的智能合约method为CR_Upload，包含信息为内容信息、作者信息和属性参数。
+        >
+        > 授权/转让交易所使用的智能合约method为CR_Transfer，包含信息为上一交易ID、交易对方（现版权持有人）地址和属性参数。
+        >
+        > 可以通过授权/转让交易中心的“上一交易ID”完成溯源，直接找到初始交易，从而确定版权内容。
 
-## Versioning
-We use Semantic Versioning (SemVer) for versioning, if you're intereted in closely following AElf's developement please check out the SemVer docs.
+    - 参数说明
 
-## License
-AElf Boilerplate is licenced under MIT
+      - 内容信息：暂且由哈希值代替，需要进一步设计
+      - 作者信息：包含作者的姓名等身份信息
+      - 时间戳：系统自动生成，为提交申请的时间，时间精度要求高
+      - 属性参数：由多位二进制数表示（具体多少位需要进一步设计，根据需要的参数数量变化）
+      - 签名：系统自动生成，暂不需要考虑生成方式
+      - 上一交易ID：定位到上一次的交易，如果该交易存在于未交易版权池中，则证明其可以交易
+
+	3. 合约内部逻辑
+
+    - CR_Upload（需要先置的approve交易）：
+    
+      - 输入内容信息、作者信息、时间戳属性参数（属性参数缺省时为默认值）
+      - 验证版权是否已经上链（较为模糊，暂且跳过）
+      - 验证作者信息（暂且跳过）
+      - 生成交易，金额（存证手续费）为某个固定值。币种为aelf币，from为本人，to为合约本省，memo中写“Upload”
+      - 提取交易ID，存入可交易版权池（暂且由State代替）中
+      - 返回true
+    
+    -  CR_Transfer（需要先置的approve交易）： 
+    
+      - 输入上一笔交易的ID、交易对方地址（缺省时自动提取本合约使用人的地址）、时间戳（系统自动提取）、交易金额和属性参数（属性参数缺省时为默认值）
+      - 验证签名，确认是否为本人持有且具有交易权限（暂且跳过）
+      - 生成交易，金额（版权转让/授权费）为输入值。币种为aelf币，from为对方交易地址，to为本人，memo中写“Transfer”
+    
+      - 如果为本次交易为版权转让（记录在属性参数中），则提取交易ID，存入可交易版权池（暂且由State代替）中；否则跳过。
+      - 返回true
