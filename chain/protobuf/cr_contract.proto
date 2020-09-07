@@ -40,7 +40,7 @@ message TransferData {//交易输入内容数据结构
     sint64 flags = 4;//属性参数
 }
 
-message CR_Set{//存证集合数据结构
+message CR_Set{//存证记录数据结构
     aelf.Address Address = 1;//持有人地址
     repeated aelf.Hash CR_ID = 2;//所持版权对应的交易ID
 }

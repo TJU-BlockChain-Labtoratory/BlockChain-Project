@@ -17,5 +17,8 @@
     <ContractCode Include="..\..\protobuf\cr_contract.proto">
       <Link>Protobuf/Proto/cr_contract.proto</Link>
     </ContractCode>
+    <ContractReference Include="..\..\protobuf\token_contract.proto">
+      <Link>Protobuf/Proto/token_contract.proto</Link>
+    </ContractReference>
   </ItemGroup>
 </Project>

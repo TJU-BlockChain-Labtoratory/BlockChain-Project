@@ -2,6 +2,7 @@ using Google.Protobuf.WellKnownTypes;
 using AElf.CSharp.Core;
 using AElf.CSharp.Core.Extension;
 using AElf.Sdk.CSharp;
+using AElf.Contracts.MultiToken;
 using AElf.Types;
 
 namespace AElf.Contracts.CRContract
@@ -21,17 +22,58 @@ namespace AElf.Contracts.CRContract
         /// <returns>a HelloReturn</returns>
         public override BoolValue CR_Upload(UploadData input)
         {
+            //验证输入信息的正确性
+            
+
+            //验证版权是否上链
+
+            //验证作者信息
+            var CRInformation = State.CR_Set_Base[Context.Sender];
+            Assert(CRInformation != null, $"User {Context.Sender} not registered before.");//检验用户是否存在
+
+            //生成上链交易
+            //TimeSpan uploadTime = DateTime.Now - new DateTime(1970,1,1,0,0,0,0);//获取系统时间函数
+            State.TokenContract.TransferFrom.Send(new TransferFromInput
+            {
+                Symbol = "CARD",
+                Amount = 100,
+                From = Context.Sender,
+                To = Context.Self,
+                Memo = "UpLoad"
+            });
+            
+            CRInformation.CRID.Add(Context.TransactionId);
+
+            State.CR_Set_Base[Context.Sender] = CRInformation;
+            
+            //存储到State中
+
             return new BoolValue{Value = true};
         }
-
+        
+        //买家发起交易
         public override BoolValue CR_Transfer(TransferData input)
         {
+
+            State.TokenContract.TransferFrom.Send( new TransferFromInput {
+                Symbol = "CARD", //???
+                Amount = input.Price,  // 商定的价格
+                From = Context.Sender,
+                To = input.DestAddr,
+                Memo = "Transfer From Aelf To DestAddr"
+            });
+
+
+
+
+            //记录到State中
+
             return new BoolValue{Value = true};
         }
 
         public override CR_Set Get_CR(Address input)
         {
-            return new CR_Set();
+            return State.CR_Set_Base[input] ?? new CR_Set();
         }
     }
 }
