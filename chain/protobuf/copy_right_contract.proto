@@ -1,0 +1,48 @@
+syntax = "proto3";
+import "aelf/core.proto";
+import "aelf/options.proto";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+option csharp_namespace = "AElf.Contracts.CopyRightContract";
+
+service CopyRightContract {
+
+    option (aelf.csharp_state) = "AElf.Contracts.CopyRightContract.CopyRightContractState";
+
+    rpc Initial (google.protobuf.Empty) returns (google.protobuf.Empty) { }
+
+    rpc CR_Upload (UploadData) returns (google.protobuf.BoolValue) { }
+
+    rpc CR_Transfer (TransferData) returns (google.protobuf.BoolValue) { }
+
+    rpc Get_CR (aelf.Address) returns (CR_Set) {
+        option (aelf.is_view) = true;
+    }
+}
+
+// a custom message, used as the return type of the Hello action
+message Identity {//身份信息数据结构
+    string name = 1;//姓名
+    //后续继续添加
+}
+
+message UploadData {//上链输入内容数据结构
+    aelf.Address Address = 1;//上传人地址
+    Identity Creater = 2;//作者信息
+    string ContentHash = 3;//内容信息，暂时用string类型
+    sint64 flags = 4;//属性参数
+}
+
+message TransferData {//交易输入内容数据结构
+    aelf.Hash preID = 1;//上一笔交易的ID
+    aelf.Address destAddr = 2;//目标用户地址
+    sint64 Price = 3;//价格
+    sint64 flags = 4;//属性参数
+}
+
+message CR_Set{//存证记录数据结构
+    aelf.Address Address = 1;//持有人地址
+    repeated aelf.Hash CR_ID = 2;//所持版权对应的交易ID
+}
