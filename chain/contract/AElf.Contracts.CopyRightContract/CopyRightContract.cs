@@ -31,8 +31,17 @@ namespace AElf.Contracts.CopyRightContract
             State.Initialized.Value = true;
             return new Empty();
         }
-        
+        public override Empty Register(Empty input)
+        {
+            Assert(State.CR_Set_Base[Context.Sender] == null, $"User {Context.Sender} already registered.");
+            var information = new CR_Set
+            {
+                Address = Context.Sender
+            };
+            State.CR_Set_Base[Context.Sender] = information;
 
+            return new Empty();
+        }
         public override BoolValue CR_Upload(UploadData input)
         {
             //验证输入信息的正确性
@@ -41,11 +50,9 @@ namespace AElf.Contracts.CopyRightContract
             //验证版权是否上链
 
             //验证作者信息
+            
+            Assert(State.CR_Set_Base[Context.Sender] != null, $"User {Context.Sender} not registered before.");//检验用户是否存在
             var CRInformation = State.CR_Set_Base[Context.Sender];
-            if(CRInformation == null)
-                CRInformation = new CR_Set();
-           //Assert(CRInformation != null, $"User {Context.Sender} not registered before.");//检验用户是否存在
-
             //生成上链交易
             //TimeSpan uploadTime = DateTime.Now - new DateTime(1970,1,1,0,0,0,0);//获取系统时间函数
             State.TokenContract.TransferFrom.Send(new TransferFromInput

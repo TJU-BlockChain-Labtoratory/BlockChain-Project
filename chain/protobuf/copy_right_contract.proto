@@ -13,6 +13,8 @@ service CopyRightContract {
 
     rpc Initial (google.protobuf.Empty) returns (google.protobuf.Empty) { }
 
+    rpc Register (google.protobuf.Empty) returns (google.protobuf.Empty) { }
+
     rpc CR_Upload (UploadData) returns (google.protobuf.BoolValue) { }
 
     rpc CR_Transfer (TransferData) returns (google.protobuf.BoolValue) { }

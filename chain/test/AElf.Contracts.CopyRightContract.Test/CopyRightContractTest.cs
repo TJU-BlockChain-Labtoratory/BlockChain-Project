@@ -15,9 +15,10 @@ namespace AElf.Contracts.CopyRightContract
         private TokenContractContainer.TokenContractStub AliceTokenContractStub => GetTokenContractStub(AliceKeyPair);
 
         [Fact]
-        public async Task CopyRightCall_ReturnsCopyRightMessage()
+        public async Task CopyRightCall_RegisterTest()
         {
             await CopyRightContractStub.Initial.SendAsync(new Empty());
+            await CopyRightContractStub.Register.SendAsync(new Empty());
 
             await TokenContractStub.Transfer.SendAsync(new TransferInput
             {
@@ -32,7 +33,13 @@ namespace AElf.Contracts.CopyRightContract
                 Symbol = "ELF",
                 Amount = 100000000_00000000
             });
+        }
 
+        [Fact]
+        public async Task CopyRightCall_ReturnsCopyRightMessage()
+        {
+            await CopyRightCall_RegisterTest();
+            
             var creater = new Identity{
                 Name = "tester"
             };
