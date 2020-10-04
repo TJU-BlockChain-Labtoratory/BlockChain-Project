@@ -32,7 +32,7 @@ function initDomEvent(multiTokenContract, CopyRightContract , bingoGameContract)
   const refreshButton = document.getElementById('refresh-button');
   const loader = document.getElementById('loader');
   let txId = 0;
-  let contractAddr = bingoGameContract.address;
+  let contractAddr = CopyRightContract.address;
   // Update your card number,Returns the change in the number of your cards
   function getBalance() {
     const payload = {
