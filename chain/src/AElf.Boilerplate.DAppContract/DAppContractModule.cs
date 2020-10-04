@@ -19,6 +19,11 @@ namespace AElf.Boilerplate.DAppContract
                 .AddSingleton<ISmartContractAddressNameProvider, LotterySmartContractAddressNameProvider>();
             context.Services
                 .AddTransient<IContractInitializationProvider, LotteryContractInitializationProvider>();
+
+            context.Services
+                .AddSingleton<ISmartContractAddressNameProvider, CopyRightSmartContractAddressNameProvider>();
+            context.Services
+                .AddTransient<IContractInitializationProvider, CopyRightContractInitializationProvider>();
         }
     }
 }

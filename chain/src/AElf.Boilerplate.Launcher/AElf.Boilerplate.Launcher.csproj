@@ -24,6 +24,16 @@
             <CopyToOutputDirectory>lib\netcoreapp3.1\*.xml</CopyToOutputDirectory>
             <PackageName>aelf.webapp.application.net</PackageName>
         </PackageReference>
+        <ProjectReference Include="..\..\contract\AElf.Contracts.BingoGameContract\AElf.Contracts.BingoGameContract.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <OutputItemType>Contract</OutputItemType>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </ProjectReference>
+        <ProjectReference Include="..\..\contract\AElf.Contracts.CopyRightContract\AElf.Contracts.CopyRightContract.csproj">
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+            <OutputItemType>Contract</OutputItemType>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </ProjectReference>
     </ItemGroup>
 
     <ItemGroup>

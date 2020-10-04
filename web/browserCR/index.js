@@ -11,6 +11,7 @@ const { sha256 } = AElf.utils;
 const defaultPrivateKey = '845dadc4609852818f3f7466b63adad0504ee77798b91853fdab6af80d3a4eba';
 // const wallet = AElf.wallet.createNewWallet();
 const wallet = AElf.wallet.getWalletByPrivateKey(defaultPrivateKey);
+console.log(wallet.address);
 // link to local Blockchain, you can learn how to run a local node in https://docs.aelf.io/main/main/setup
 // const aelf = new AElf(new AElf.providers.HttpProvider('http://127.0.0.1:1235'));
 const aelf = new AElf(new AElf.providers.HttpProvider('http://127.0.0.1:1235'));
@@ -20,20 +21,18 @@ if (!aelf.isConnected()) {
 }
 
 // add event for dom
-function initDomEvent(multiTokenContract, CopyRightContract) {
+function initDomEvent(multiTokenContract, CopyRightContract , bingoGameContract) {
   const register = document.getElementById('register');
   const balance = document.getElementById('balance');
   const siteBody = document.getElementById('site-body');
   const play = document.getElementById('play');
   const bingo = document.getElementById('bingo');
-  const bingoMa = document.getElementById('bingo-manually');
-  const getAward = document.getElementById('get-award');
   const buttonBox = document.querySelector('.button-box');
   const balanceInput = document.getElementById('balance-input');
   const refreshButton = document.getElementById('refresh-button');
   const loader = document.getElementById('loader');
   let txId = 0;
-  let contractAddr = CopyRightContract.address;
+  let contractAddr = bingoGameContract.address;
   // Update your card number,Returns the change in the number of your cards
   function getBalance() {
     const payload = {
@@ -130,47 +129,38 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
 
   // Check the format of the input, start play
   play.onclick = () => {
-    const reg = /^[1-9]\d*$/;
-    const value = parseInt(balanceInput.value, 10);
-    if (reg.test(value) && value <= balance.innerText) {
-      loader.style.display = 'inline-block';
-      multiTokenContract.Approve(
-        {
-            symbol: 'ELF',
-            spender: contractAddr,
-            amount: 88000000000000000
-        },
-        (err, result) => {
-            console.log('>>>>>>>>>>>>>>>>>>>', result);
-        },  
-      ).then(
-        console.log(value),
-        CopyRightContract.CR_Upload({
-          Address: wallet.address,
-          creater: {name: cyw},
-          ContentHash: "dasfasfasfasasf",
-          flags: 0
-        })
-        .then(result => {
-          console.log('Play result: ', result);
-          play.style.display = 'none';
-          txId = result.TransactionId;
-          setTimeout(() => {
-            bingo.style.display = 'inline-block';
-            loader.style.display = 'none';
-          }, 400);
+    loader.style.display = 'inline-block';
+    multiTokenContract.Approve(
+      {
+          symbol: 'ELF',
+          spender: contractAddr,
+          amount: 88000000000000000
+      },
+      (err, result) => {
+          console.log('>>>>>>>>>>>>>>>>>>>', result);
+      },  
+    ).then(
+      console.log(value),
+      CopyRightContract.CR_Upload({
+        Address: wallet.address,
+        Creater: {name: "cyw"},
+        ContentHash: "dasfasfasfasasf",
+        flags: 0
+      })
+      .then(result => {
+        console.log('Play result: ', result);
+        play.style.display = 'none';
+        txId = result.TransactionId;
+        setTimeout(() => {
+          bingo.style.display = 'inline-block';
+          loader.style.display = 'none';
+        }, 400);
           // alert('Wait patiently, click on the results when the Bingo button appears！');
-        })
-        .catch(err => {
-          console.log(err);
-        })
-      );
-
-    } else if (value > balance.innerText) {
-      alert('Please enter a number less than the number of cards you own!');
-    } else {
-      alert('Please enter a positive integer greater than 0!');
-    }
+      })
+      .catch(err => {
+        console.log(err);
+      })
+    );
   };
 
   // return to game results
@@ -185,7 +175,7 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
           console.log('>>>>>>>>>>>>>>>>>>>', result);
       },  
     )
-    CopyRightContract.Bingo(txId).then(bingo => {
+    bingoGameContract.Bingo(txId).then(bingo => {
       console.log('bingo:', bingo);
     })
     setTimeout(() =>{
@@ -209,17 +199,6 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
       
   };
 
-  bingoMa.onclick = () => {
-    CopyRightContract.Bingo('280bb9b4b6cc910123a138f1f1a0707350d4767313fb9c0415c5c80ffe7f13d9').then(bingo => {
-      console.log('bingoMa:', bingo);
-    });
-  };
-
-  getAward.onclick = () => {
-    CopyRightContract.GetAward.call('280bb9b4b6cc910123a138f1f1a0707350d4767313fb9c0415c5c80ffe7f13d9').then(bingo => {
-      console.log('bingoMa:', bingo);
-    });
-  }
 }
 
 function init() {
@@ -230,22 +209,23 @@ function init() {
     // return contract's address which you query by contract's name
     .then(zeroC => Promise.all([
       zeroC.GetContractAddressByName.call(sha256('AElf.ContractNames.Token')),
-      zeroC.GetContractAddressByName.call(sha256('AElf.ContractNames.bingoGame')),
+      zeroC.GetContractAddressByName.call(sha256('AElf.ContractNames.BingoGameContract')),
       zeroC.GetContractAddressByName.call(sha256('AElf.ContractNames.CopyRightContract')),
      // console.log(zeroC)
     ]))
     // return contract's instance and you can call the methods on this instance
-    .then(([tokenAddress, bingoAddress,CopyRithtAddress]) => Promise.all([
+    .then(([tokenAddress, bingoAddress,CopyRightAddress]) => Promise.all([
       aelf.chain.contractAt(tokenAddress, wallet),
       aelf.chain.contractAt(bingoAddress, wallet),
       aelf.chain.contractAt(CopyRightAddress, wallet)
     ]))
-    .then(([multiTokenContract, CopyRightContract]) => {
+    .then(([multiTokenContract , bingoGameContract, CopyRightContract]) => {
       window.CopyRightContract = CopyRightContract;
-      initDomEvent(multiTokenContract, CopyRightContract);
+      window.bingoGameContract = bingoGameContract;
+      initDomEvent(multiTokenContract, CopyRightContract , bingoGameContract);
       document.getElementById('register').innerText = 'Click into game';
       document.getElementById('address').innerText = wallet.address;
-      console.log(CopyRightContract.address);
+      console.log(wallet.address);
     })
     .catch(err => {
       console.log(err);

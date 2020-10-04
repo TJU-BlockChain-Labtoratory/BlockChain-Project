@@ -32,7 +32,8 @@ namespace AElf.Boilerplate.MainChain
                 TokenConverterSmartContractAddressNameProvider.Name,
                 TokenHolderSmartContractAddressNameProvider.Name,
                 EconomicSmartContractAddressNameProvider.Name,
-                //BingoGameSmartContractAddressNameProvider.Name,
+                BingoGameSmartContractAddressNameProvider.Name,
+                CopyRightSmartContractAddressNameProvider.Name
                 //LotterySmartContractAddressNameProvider.Name
             };
         }
