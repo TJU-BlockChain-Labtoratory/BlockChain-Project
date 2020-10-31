@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <!-- The root namespace -->
-    <RootNamespace>AElf.Contracts.CopyRightContract</RootNamespace>
+    <RootNamespace>AElf.Contracts.CopyRightTokenContract</RootNamespace>
     <!-- Mark this project as a contract -->
     <IsContract>true</IsContract>
   </PropertyGroup>
@@ -14,14 +14,11 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Reference the protobuf definition of the contract -->
-    <ContractCode Include="..\..\protobuf\copy_right_contract.proto">
-      <Link>Protobuf/Proto/copy_right_contract.proto</Link>
+    <ContractCode Include="..\..\protobuf\copy_right_token_contract.proto">
+      <Link>Protobuf/Proto/copy_right_token_contract.proto</Link>
     </ContractCode>
     <ContractReference Include="..\..\protobuf\token_contract.proto">
       <Link>Protobuf/Proto/token_contract.proto</Link>
-    </ContractReference>
-    <ContractReference Include="..\..\protobuf\copy_right_token_contract.proto">
-      <Link>Protobuf/Proto/copy_right_token_contract.proto</Link>
     </ContractReference>
   </ItemGroup>
 </Project>

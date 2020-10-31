@@ -40,7 +40,7 @@
             <OutputItemType>Contract</OutputItemType>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </ProjectReference>
-        <ProjectReference Include="..\..\contract\AElf.Contracts.CopyRightContract\AElf.Contracts.CopyRightContract.csproj">
+        <ProjectReference Include="..\..\contract\AElf.Contracts.CopyRightTokenContract\AElf.Contracts.CopyRightTokenContract.csproj">
             <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
             <OutputItemType>Contract</OutputItemType>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -55,7 +55,10 @@
             <Link>Protobuf\Proto\cr_contract.proto</Link>
         </ContractStub>
         <ContractStub Include="..\..\protobuf\copy_right_contract.proto">
-            <Link>Protobuf\Proto\cr_contract.proto</Link>
+            <Link>Protobuf\Proto\copy_right_contract.proto</Link>
+        </ContractStub>
+        <ContractStub Include="..\..\protobuf\copy_right_token_contract.proto">
+            <Link>Protobuf\Proto\copy_right_token_contract.proto</Link>
         </ContractStub>
     </ItemGroup>
 

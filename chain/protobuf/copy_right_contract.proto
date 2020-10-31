@@ -11,40 +11,40 @@ service CopyRightContract {
 
     option (aelf.csharp_state) = "AElf.Contracts.CopyRightContract.CopyRightContractState";
 
-    rpc Initial (google.protobuf.Empty) returns (google.protobuf.Empty) { }
+    rpc CR_Initial (google.protobuf.Empty) returns (google.protobuf.Empty) { }//合约初始化
 
-    rpc Register (google.protobuf.Empty) returns (google.protobuf.Empty) { }
+    rpc CR_Register (Identity) returns (aelf.SInt64Value) { }//用户注册
 
-    rpc CR_Upload (UploadData) returns (google.protobuf.BoolValue) { }
+    rpc CR_Login(Identity) returns (aelf.SInt64Value) { }//用户登录
 
-    rpc CR_Transfer (TransferData) returns (google.protobuf.BoolValue) { }
+    rpc CR_Upload (UploadData) returns (aelf.SInt64Value) { }//上传版权
 
-    rpc Get_CR (aelf.Address) returns (CR_Set) {
+    rpc CR_Transfer (TransferData) returns (aelf.SInt64Value) { }//交易版权
+
+    rpc CR_Logout(Identity) returns (aelf.SInt64Value){ }//用户登出
+
+    rpc CR_Delete(Identity) returns (aelf.SInt64Value){ }//用户注销
+
+    rpc Get_User_Info(aelf.Address) returns (Identity){
         option (aelf.is_view) = true;
     }
 }
 
 // a custom message, used as the return type of the Hello action
 message Identity {//身份信息数据结构
-    string name = 1;//姓名
+    aelf.Hash Address = 1;//地址
     //后续继续添加
 }
 
-message UploadData {//上链输入内容数据结构
-    aelf.Address Address = 1;//上传人地址
-    Identity Creater = 2;//作者信息
-    string ContentHash = 3;//内容信息，暂时用string类型
-    sint64 flags = 4;//属性参数
+message UploadData{
+    aelf.Address CRT_Creator = 1;
+    aelf.Address CRT_Owner = 2;
+    string CRT_Content = 3;
+    sint64 CRT_Status = 4;
 }
 
-message TransferData {//交易输入内容数据结构
-    aelf.Hash preID = 1;//上一笔交易的ID
-    aelf.Address destAddr = 2;//目标用户地址
-    sint64 Price = 3;//价格
-    sint64 flags = 4;//属性参数
-}
-
-message CR_Set{//存证记录数据结构
-    aelf.Address Address = 1;//持有人地址
-    repeated aelf.Hash CR_ID = 2;//所持版权对应的交易ID
+message TransferData{
+    aelf.Address addr = 1;
+    aelf.Hash CRT_ID = 2;
+    sint64 price = 3;
 }

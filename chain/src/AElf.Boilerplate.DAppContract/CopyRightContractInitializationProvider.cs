@@ -14,7 +14,7 @@ namespace AElf.Boilerplate.DAppContract
             {
                 new InitializeMethod
                 {
-                    MethodName = nameof(CopyRightContractContainer.CopyRightContractStub.Initial),
+                    MethodName = nameof(CopyRightContractContainer.CopyRightContractStub.CR_Initial),
                     Params = ByteString.Empty
                 }
             };

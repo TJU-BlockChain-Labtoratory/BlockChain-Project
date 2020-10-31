@@ -21,7 +21,7 @@ namespace AElf.Contracts.CopyRightContract
         /// </summary>
         /// <param name="input">Empty message (from Protobuf)</param>
         /// <returns>a HelloReturn</returns>
-        public override Empty Initial(Empty input)
+        public override Empty CR_Initial(Empty input)
         {
             Assert(!State.Initialized.Value, "Already initialized.");
             State.TokenContract.Value =
@@ -31,72 +31,40 @@ namespace AElf.Contracts.CopyRightContract
             State.Initialized.Value = true;
             return new Empty();
         }
-        public override Empty Register(Empty input)
+        public override SInt64Value CR_Register(Identity input)
         {
-            Assert(State.CR_Set_Base[Context.Sender] == null, $"User {Context.Sender} already registered.");
-            var information = new CR_Set
-            {
-                Address = Context.Sender
-            };
-            State.CR_Set_Base[Context.Sender] = information;
-
-            return new Empty();
+            return new SInt64Value{Value = 0};            
         }
-        public override BoolValue CR_Upload(UploadData input)
+
+        public override SInt64Value CR_Login(Identity input)
         {
-            //验证输入信息的正确性
-            
+            return new SInt64Value{Value = 0};
+        }
+        
+        public override SInt64Value CR_Logout(Identity input)
+        {
+            return new SInt64Value{Value = 0};            
+        }
 
-            //验证版权是否上链
+        public override SInt64Value CR_Delete(Identity input)
+        {            
+            return new SInt64Value{Value = 0};
+        }
 
-            //验证作者信息
-            
-            Assert(State.CR_Set_Base[Context.Sender] != null, $"User {Context.Sender} not registered before.");//检验用户是否存在
-            var CRInformation = State.CR_Set_Base[Context.Sender];
-            //生成上链交易
-            //TimeSpan uploadTime = DateTime.Now - new DateTime(1970,1,1,0,0,0,0);//获取系统时间函数
-            State.TokenContract.TransferFrom.Send(new TransferFromInput
-            {
-                Symbol = "ELF",
-                Amount = 100,
-                From = Context.Sender,
-                To = Context.Self,
-                Memo = "UpLoad"
-            });
-            
-            CRInformation.CRID.Add(Context.TransactionId);
-            //Assert(CRInformation != null, $"User {Context.Sender} not registered before.");//检验用户是否存在
-
-            State.CR_Set_Base[Context.Sender] = CRInformation;
-            
-            //存储到State中
-
-            return new BoolValue{Value = true};
+        public override SInt64Value CR_Upload(UploadData input)
+        {
+            return new SInt64Value{Value = 0};           
         }
         
         //买家发起交易
-        public override BoolValue CR_Transfer(TransferData input)
+        public override SInt64Value CR_Transfer(TransferData input)
         {
-
-            State.TokenContract.TransferFrom.Send( new TransferFromInput {
-                Symbol = "ELF", //???
-                Amount = input.Price,  // 商定的价格
-                From = Context.Sender,
-                To = input.DestAddr,
-                Memo = "Transfer From Aelf To DestAddr"
-            });
-
-
-
-
-            //记录到State中
-
-            return new BoolValue{Value = true};
+            return new SInt64Value{Value = 0};
         }
 
-        public override CR_Set Get_CR(Address input)
+        public override Identity Get_User_Info(Address input)
         {
-            return State.CR_Set_Base[input] ?? new CR_Set();
+            return  new Identity();
         }
     }
 }
