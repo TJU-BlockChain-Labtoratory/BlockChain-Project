@@ -23,12 +23,35 @@ namespace AElf.Contracts.CopyRightTokenContract
         /// <returns>a HelloReturn</returns>
         public override Hash CRT_Create(CreateInput input)
         {
-            return new Hash();
+            //生成CRT_ID
+            var HashOfContent = HashHelper.ComputeFrom(input.CRTContent);
+            var HashOfCreater = HashHelper.ComputeFrom(input.CRTCreator);
+            var HashValue = HashHelper.ConcatAndCompute(HashOfContent,HashOfCreater);
+            Assert(State.CRT_Base[HashValue] == null,"already updated!");
+            //生成CRT_Info
+            var nCRTInfo = new CRT_Info{
+                CRTID = HashValue,
+                CRTCreator = input.CRTCreator,
+                CRTOwner = input.CRTOwner,
+                CRTContent = input.CRTContent,
+                CRTStatus = input.CRTStatus
+            };
+            //生成CRT
+            var nCRT = new CRT{
+                Info = nCRTInfo
+            };
+            //将CRT记录进State中
+            State.CRT_Base[HashValue] = nCRT;
+            return HashValue;
         }
 
         public override SInt64Value CRT_Approve(ApproveInput input)
         {
-           return new SInt64Value{Value = 0};
+            var CRTfetch = State.CRT_Base[input.CRTID];
+            Assert(CRTfetch != null , "not exist!");
+            CRTfetch.CRTApproved.Add(input.Addr);
+            State.CRT_Base[input.CRTID] = CRTfetch;
+            return new SInt64Value{Value = 0};
         }
 
         public override SInt64Value CRT_UnApprove(ApproveInput input)
