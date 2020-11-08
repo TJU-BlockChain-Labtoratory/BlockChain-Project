@@ -32,7 +32,7 @@ service CopyRightContract {
 
 // a custom message, used as the return type of the Hello action
 message Identity {//身份信息数据结构
-    aelf.Hash Address = 1;//地址
+    aelf.Address Address = 1;//地址
     //后续继续添加
 }
 

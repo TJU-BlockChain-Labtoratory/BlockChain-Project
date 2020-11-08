@@ -14,5 +14,6 @@ namespace AElf.Contracts.CopyRightContract
 
         public MappedState<Address, Identity> UserInfo { get; set; }
 
+        public MappedState<Address, bool> UserState { get; set; } 
     }
 }

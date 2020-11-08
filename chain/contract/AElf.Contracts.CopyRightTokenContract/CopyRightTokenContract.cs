@@ -49,6 +49,7 @@ namespace AElf.Contracts.CopyRightTokenContract
         {
             var CRTfetch = State.CRT_Base[input.CRTID];
             Assert(CRTfetch != null , "not exist!");
+            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
             CRTfetch.CRTApproved.Add(input.Addr);
             State.CRT_Base[input.CRTID] = CRTfetch;
             return new SInt64Value{Value = 0};
@@ -56,32 +57,55 @@ namespace AElf.Contracts.CopyRightTokenContract
 
         public override SInt64Value CRT_UnApprove(ApproveInput input)
         {
-           return new SInt64Value{Value = 0};
+            var CRTfetch = State.CRT_Base[input.CRTID];
+            Assert(CRTfetch != null , "not exist!");
+            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            Assert(CRTfetch.CRTApproved.Contains(input.Addr) == true,"not already approved");            
+            CRTfetch.CRTApproved.Remove(input.Addr);
+            State.CRT_Base[input.CRTID] = CRTfetch;
+            return new SInt64Value{Value = 0};
         }
 
         public override SInt64Value CRT_ChangeOwner(TransferInput input)
         {
-           return new SInt64Value{Value = 0};
+            var CRTfetch = State.CRT_Base[input.CRTID];
+            Assert(CRTfetch != null , "not exist!");            
+            CRTfetch.Info.CRTOwner = input.Addr;
+            State.CRT_Base[input.CRTID] = CRTfetch;
+            return new SInt64Value{Value = 0};
         }
 
         public override SInt64Value CRT_Destory(Hash input)
         {
-           return new SInt64Value{Value = 0};
+            var CRTfetch = State.CRT_Base[input];
+            Assert(CRTfetch != null , "not exist!");            
+            CRTfetch.Info.CRTStatus = 2;
+            State.CRT_Base[input] = CRTfetch;
+            return new SInt64Value{Value = 0};
         }
 
         public override BoolValue isApproved(ApproveInput input)
         {
-            return new BoolValue {Value = true};
+            var CRTfetch = State.CRT_Base[input.CRTID];
+            Assert(CRTfetch != null , "not exist!");
+            if(CRTfetch.CRTApproved.Contains(input.Addr))
+                return new BoolValue {Value = true};
+            return new BoolValue {Value = false};
         }
 
         public override BoolValue isAuthorized(AuthorizeInput input)
         {
-            return new BoolValue {Value = true};
+            var CRTfetch = State.CRT_Base[input.CRTID];
+            Assert(CRTfetch != null , "not exist!");
+            if(CRTfetch.CRTAuthorized.Contains(input.Addr))
+                return new BoolValue {Value = true};
+            return new BoolValue {Value = false};
         }
 
         public override CRT_Info getAllInfo(Hash input)
         {
-            return new CRT_Info();
+            var CRTfetch = State.CRT_Base[input];
+            return CRTfetch.Info;
         }
     }
 }
