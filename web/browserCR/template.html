@@ -5,44 +5,68 @@
     <title>CopyRight</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="./index.css" >
+    <link crossorigin="anonymous" integrity="sha384-tmPnA6RZ3EY8nQ2M3yHLyhmabHvhkSgFCjqzQ4nfmhjFUVQJXOahb3GEiawAHaOP" href="https://lib.baomitu.com/amazeui/2.7.2/css/amazeui.flat.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="bingo-body">
-        <div class="site-header">
-            <div class="site-title" >Bingo Game</div>
-            <button id="register" class="register" type="button">Register</button>
-            <p id="address"></p>
+<body  style="background-color: rgb(205, 171, 236);">
+    <div class="am-sans-serif"  style="background-color: rgb(240, 238, 241);">
+        <ul class="am-nav am-nav-tabs">
+        <li class="am-active"><a href="#">CopyRight Contract</a></li>
+        <li><a href="#">待定</a></li>
+        <li><a href="#">待定</a></li>
+        </ul>
+    </div>
+    <div>
+        <div id="create" style="visibility: hidden;">
+            <div class="am-form am-form-horizontal">
+                <div class="am-form-group">
+                    <h1>CR_Create</h1>
+                    <fieldset class="am-form-set">
+                        <label for="CR_Creator" class="am-u-sm-2 am-form-label">CR_Creator: </label>
+                        <div class="am-u-sm-10">
+                            <input id="CR_Creator" type="text" name="CR_Creator" style="width: 750px;"><br>
+                        </div>
+                        <label for="CR_Owner" class="am-u-sm-2 am-form-label">CR_Owner: </label>
+                        <div class="am-u-sm-10">
+                            <input id="CR_Owner" type="text" name="CR_Owner" style="width: 750px;"><br>
+                        </div>
+                        <label for="CR_Status" class="am-u-sm-2 am-form-label">CR_Status: </label>
+                        <div class="am-u-sm-10">
+                            <input id="CR_Status" type="text" name="CR_Status" style="width: 750px;"><br>
+                        </div>
+                        <div class="am-u-sm-10">
+                            <button id="CR_Create" type="button" class="am-btn am-btn-secondary">CR_Register</button>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
         </div>
-        <div class="site-body" id="site-body">
-            <div class="balance">Your CARD: <span id="balance">loading...</span> CARD （Refresh page to restart）</div>
-            <div class="input-box">
-                <input type="text" id="balance-input" placeholder="Please input amount">
-                <span class="input-border bottom"></span>
-                <span class="input-border right"></span>
-                <span class="input-border top"></span>
-                <span class="input-border left"></span>
-                <button type="button" class="button" id="refresh-button">Get balance manually</button>
+        <div class="am-g" style="text-align: center;">
+            <div class="am-u-md-8 am-u-sm-centered">
+                <button id="CR_Register" type="button" class="am-btn am-btn-secondary" data-am-loading="loadingText: 'loading...'">CR_Register</button>
             </div>
-            <div class="button-box">
-                <button type="button" class="button" >3000</button>
-                <button type="button" class="button" >5000</button>
-                <button type="button" class="button" >Half</button>
-                <button type="button" class="button" >All-In</button>
-            </div>
-            <div>
-                <button class="play" id="play" type="button">Play</button>
-            </div>
-            <div>
-                <button class="play" id="bingo" type="button">Bingo</button>
-            </div>
-
         </div>
-        <div class="loader" id="loader">
-            <div class="outer"></div>
-            <div class="middle"></div>
-            <div class="inner"></div>
+        <div id="transfer" style="visibility: hidden;">
+            <hr>
+            <div class="am-form am-form-horizontal">
+                <div class="am-form-group">
+                    <h1>CR_Transfer</h1>
+                    <fieldset class="am-form-set">
+                        <label for="target_addr" class="am-u-sm-2 am-form-label">target_address: </label>
+                        <div class="am-u-sm-10">
+                            <input id="target_addr" type="text" name="target_addr" style="width: 750px;"><br>
+                        </div>
+                        <label for="price" class="am-u-sm-2 am-form-label">price: </label>
+                        <div class="am-u-sm-10">
+                            <input id="price" type="text" name="price" style="width: 750px;"><br>
+                        </div>
+                        <div class="am-u-sm-10">
+                            <button id="CR_Transfer" type="button" class="am-btn am-btn-secondary">CR_Transfer</button>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
         </div>
     </div>
+    <!-- <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery/min.js"></script> -->
 </body>
 </html>
