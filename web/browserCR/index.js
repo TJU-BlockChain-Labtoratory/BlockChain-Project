@@ -26,7 +26,7 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
   const CR_Owner = document.getElementById("CR_Owner");
   const CR_Status = document.getElementById("CR_Status");
   const CR_Create = document.getElementById("CR_Create");
-
+  const CR_Login = document.getElementById("CR_Login");
   const CR_Transfer = document.getElementById("CR_Transfer");
   const CR_Register = document.getElementById("CR_Register");
   const target_addr = document.getElementById("target_addr");
@@ -69,25 +69,28 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
       Address : wallet.address
     })
     .then(result => {
+      CR_Register.disabled = false;
+      console.log(result);
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  };
+
+  CR_Login.onclick = function() {
+    CopyRightContract.CR_Login({
+      Address : wallet.address
+    })
+    .then(result => {
       CR_Register.innerText = 'Loading...';
       CR_Register.disabled = true;
       console.log(result);
-      return new Promise(resolve => {
-        setTimeout(() => {
-          getBalance();
-          loading = false;
-          resolve()
-        }, 1500);
-      });
-    })
-    .then(()=>{
-      CopyRightContract.CR_Login({
-        Address : wallet.address
-      })
+      
     })
     .then(() => {
       alert('Congratulations on your successful registration！');
       CR_Register.style.display = "none";
+      CR_Login.style.display = "none";
       div_create.style.visibility = "visible";
       div_transfer.style.visibility = 'visible';
       console.log(contractAddr);
@@ -96,7 +99,6 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
       console.log(err);
     });
   };
-
   CR_Create.onclick = () => {
     CR_Create.innerText = 'Creating...';
     CR_Create.disabled = true;
