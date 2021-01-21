@@ -1,33 +1,21 @@
 using Google.Protobuf.WellKnownTypes;
-using AElf.CSharp.Core;
-using AElf.CSharp.Core.Extension;
-using AElf.Sdk.CSharp;
-using AElf.Contracts.MultiToken;
 using AElf.Types;
 
-namespace AElf.Contracts.CopyRightTokenContract
+namespace AElf.Contracts.CRTContract
 {
-    /// <summary>
-    /// The C# implementation of the contract defined in copy_right_token_contract.proto that is located in the "protobuf"
-    /// folder.
-    /// Notice that it inherits from the protobuf generated code. 
-    /// </summary>
-
-    public class CopyRightTokenContract : CopyRightTokenContractContainer.CopyRightTokenContractBase
+    public class CRTContract : CRTContractContainer.CRTContractBase
     {
-        /// <summary>
-        /// The implementation of the Hello method. It takes no parameters and returns on of the custom data types
-        /// defined in the protobuf definition file.
-        /// </summary>
-        /// <param name="input">Empty message (from Protobuf)</param>
-        /// <returns>a HelloReturn</returns>
+        public override Empty CRT_init(Empty input)
+        {
+            return new Empty();
+        }
+        
         public override Hash CRT_Create(CreateInput input)
         {
             //生成CRT_ID
             var HashOfContent = HashHelper.ComputeFrom(input.CRTContent);
             var HashOfCreater = HashHelper.ComputeFrom(input.CRTCreator);
             var HashValue = HashHelper.ConcatAndCompute(HashOfContent,HashOfCreater);
-            Assert(State.CRT_Base[HashValue] == null,"already updated!");
             //生成CRT_Info
             var nCRTInfo = new CRT_Info{
                 CRTID = HashValue,
@@ -81,6 +69,7 @@ namespace AElf.Contracts.CopyRightTokenContract
             Assert(CRTfetch != null , "not exist!");            
             CRTfetch.Info.CRTStatus = 2;
             State.CRT_Base[input] = CRTfetch;
+            State.CRT_Account[CRTfetch.Info.CRTOwner].CRTSet.Remove(CRTfetch);
             return new SInt64Value{Value = 0};
         }
 
@@ -106,6 +95,11 @@ namespace AElf.Contracts.CopyRightTokenContract
         {
             var CRTfetch = State.CRT_Base[input];
             return CRTfetch.Info;
+        }
+        
+        public override CRT_List getAllCRTs(Address input)
+        {
+            return State.CRT_Account[input];
         }
     }
 }

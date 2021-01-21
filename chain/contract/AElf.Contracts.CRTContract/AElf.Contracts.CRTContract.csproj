@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <!-- The root namespace -->
-        <RootNamespace>AElf.Contracts.CRContract</RootNamespace>
+        <RootNamespace>AElf.Contracts.CRTContract</RootNamespace>
         <!-- Mark this project as a contract -->
         <IsContract>true</IsContract>
     </PropertyGroup>
@@ -14,14 +14,15 @@
     </PropertyGroup>
     <ItemGroup>
         <!-- Reference the protobuf definition of the contract -->
-        <ContractCode Include="..\..\protobuf\cr_contract.proto">
-            <Link>Protobuf\Proto\cr_contract.proto</Link>
+        <ContractCode Include="..\..\protobuf\cr_token_contract.proto">
+            <Link>Protobuf\Proto\cr_token_contract.proto</Link>
         </ContractCode>
         <ContractReference Include="..\..\protobuf\token_contract.proto">
             <Link>Protobuf/Proto/token_contract.proto</Link>
         </ContractReference>
-        <ContractReference Include="..\..\protobuf\cr_token_contract.proto">
-            <Link>Protobuf/Proto/cr_token_contract.proto</Link>
-        </ContractReference>
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="AElf.Core" Version="1.0.0" />
+      <PackageReference Include="AElf.Types" Version="1.0.0" />
     </ItemGroup>
 </Project>

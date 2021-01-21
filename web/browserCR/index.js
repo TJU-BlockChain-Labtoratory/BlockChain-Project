@@ -9,6 +9,7 @@ import AElf from 'aelf-sdk';
 const { sha256 } = AElf.utils;
 
 const defaultPrivateKey = '845dadc4609852818f3f7466b63adad0504ee77798b91853fdab6af80d3a4eba';
+const CRAddress = '2LUmicHyH4RXrMjG4beDwuDsiWJESyLkgkwPdGTR8kahRzq5XS';
 // const wallet = AElf.wallet.createNewWallet();
 const wallet = AElf.wallet.getWalletByPrivateKey(defaultPrivateKey);
 console.log("wallet.address: " + wallet.address);
@@ -21,7 +22,7 @@ if (!aelf.isConnected()) {
 }
 
 // add event for dom
-function initDomEvent(multiTokenContract, CopyRightContract) {
+function initDomEvent(multiTokenContract, CRContract) {
   const CR_Creator = document.getElementById("CR_Creator");
   const CR_Owner = document.getElementById("CR_Owner");
   const CR_Status = document.getElementById("CR_Status");
@@ -33,9 +34,9 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
   const price = document.getElementById("price");
   const div_create = document.getElementById("create");
   const div_transfer = document.getElementById("transfer");
-
+  const Approve = document.getElementById("Approve");
   let txId = 0;
-  let contractAddr = CopyRightContract.address;
+  let contractAddr = CRContract.address;
   // Update your card number,Returns the change in the number of your cards
   function getBalance() {
     const payload = {
@@ -62,12 +63,9 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
   }
 
   // display main UI
-  let loading = false;
-  let value = 88000000000000000;
+
   CR_Register.onclick = function() {
-    CopyRightContract.CR_Register({
-      Address : wallet.address
-    })
+    CRContract.CR_Register(wallet.address)
     .then(result => {
       CR_Register.disabled = false;
       console.log(result);
@@ -78,9 +76,7 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
   };
 
   CR_Login.onclick = function() {
-    CopyRightContract.CR_Login({
-      Address : wallet.address
-    })
+    CRContract.CR_Login(wallet.address)
     .then(result => {
       CR_Register.innerText = 'Loading...';
       CR_Register.disabled = true;
@@ -99,22 +95,28 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
       console.log(err);
     });
   };
-  CR_Create.onclick = () => {
-    CR_Create.innerText = 'Creating...';
-    CR_Create.disabled = true;
+  Approve.onclick = () => {
     multiTokenContract.Approve({
       symbol: 'ELF',
       spender: contractAddr,
       amount: 88000000000000000
     })
-    .then(result =>{
-      console.log(result)
-      CopyRightContract.CR_Upload({
-        CRT_Creater: CR_Creator.value,
-        CRT_Owner: CR_Owner.value,
-        CRT_Content: 'Content_test',
-        CRT_Status: CR_Status.value
-      })
+    .then(result=>{
+      console.log(result);
+    })
+    .catch(err => {
+      console.log(err);
+    })
+  }
+
+  CR_Create.onclick = () => {
+    CR_Create.innerText = 'Creating...';
+    CR_Create.disabled = true;
+    CRContract.CR_Upload({
+      CRT_Creater: CR_Creator.value,
+      CRT_Owner: CR_Owner.value,
+      CRT_Content: 'Content_test',
+      CRT_Status: CR_Status.value
     })
     .then(result => {
       setTimeout(() => {
@@ -138,7 +140,7 @@ function initDomEvent(multiTokenContract, CopyRightContract) {
       amount: 88000000000000000
     })
     .then(
-      CopyRightContract.CR_Transfer({
+      CRContract.CR_Transfer({
         preID: 'c37a491d67e3fc48058d4a2fd2624e0101fcbdf0aa05dccc765308bfdbb9cf03',
         destAddr: target_addr.value,
         Price: price.value,
@@ -164,19 +166,14 @@ function init() {
     // get instance by GenesisContractAddress
     .then(res => aelf.chain.contractAt(res.GenesisContractAddress, wallet))
     // return contract's address which you query by contract's name
-    .then(zeroC => Promise.all([
-      zeroC.GetContractAddressByName.call(sha256('AElf.ContractNames.Token')),
-      zeroC.GetContractAddressByName.call(sha256('AElf.ContractNames.CopyRightContract')),
-     // console.log(zeroC)
-    ]))
+    .then(zeroC => zeroC.GetContractAddressByName.call(sha256('AElf.ContractNames.Token')))
     // return contract's instance and you can call the methods on this instance
-    .then(([tokenAddress, CopyRightAddress]) => Promise.all([
+    .then((tokenAddress) => Promise.all([
       aelf.chain.contractAt(tokenAddress, wallet),
-      aelf.chain.contractAt(CopyRightAddress, wallet)
+      aelf.chain.contractAt(CRAddress, wallet),
     ]))
-    .then(([multiTokenContract , CopyRightContract]) => {
-      window.CopyRightContract = CopyRightContract;
-      initDomEvent(multiTokenContract, CopyRightContract);
+    .then(([multiTokenContract, CRContract]) => {
+      initDomEvent(multiTokenContract, CRContract);
     })
     .catch(err => {
       console.log(err);

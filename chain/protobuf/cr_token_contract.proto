@@ -5,11 +5,13 @@ import "aelf/options.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
 
-option csharp_namespace = "AElf.Contracts.CopyRightTokenContract";
+option csharp_namespace = "AElf.Contracts.CRTContract";
 
-service CopyRightTokenContract {
+service CRTContract {
 
-    option (aelf.csharp_state) = "AElf.Contracts.CopyRightTokenContract.CopyRightTokenContractState";
+    option (aelf.csharp_state) = "AElf.Contracts.CRTContract.CRTContractState";
+    
+    rpc CRT_init(google.protobuf.Empty) returns (google.protobuf.Empty) { }
 
     rpc CRT_Create (CreateInput) returns (aelf.Hash) { }//生成CRT
 
@@ -30,6 +32,10 @@ service CopyRightTokenContract {
     }
 
     rpc getAllInfo (aelf.Hash) returns (CRT_Info) {//查看存储信息
+        option (aelf.is_view) = true;
+    }
+
+    rpc getAllCRTs (aelf.Address) returns (CRT_List) {//查看存储信息
         option (aelf.is_view) = true;
     }
 }
@@ -69,4 +75,8 @@ message TransferInput{
 message AuthorizeInput{
     aelf.Hash CRT_ID = 1;
     aelf.Address addr = 2;
+}
+
+message CRT_List{
+    repeated CRT CRT_Set = 1;
 }

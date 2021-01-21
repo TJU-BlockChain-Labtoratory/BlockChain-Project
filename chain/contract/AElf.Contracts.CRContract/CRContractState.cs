@@ -1,6 +1,6 @@
 using AElf;
-using AElf.Sdk.CSharp.State;
 using AElf.Types;
+using AElf.Sdk.CSharp.State;
 
 namespace AElf.Contracts.CRContract
 {
@@ -10,8 +10,9 @@ namespace AElf.Contracts.CRContract
     public partial class CRContractState : ContractState
     {
         // state definitions go here.
-         public SingletonState<bool> Initialized { get; set; }
+        public SingletonState<bool> Initialized { get; set; }
 
-         public MappedState<Address, CR_Set> CR_Set_Base { get; set; }
+        public MappedState<Address, Identity> UserInfo { get; set; }
+        
     }
 }
