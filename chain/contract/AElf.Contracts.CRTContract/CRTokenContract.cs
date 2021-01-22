@@ -1,3 +1,5 @@
+using AElf.Contracts.MultiToken;
+using AElf.Sdk.CSharp;
 using Google.Protobuf.WellKnownTypes;
 using AElf.Types;
 
@@ -7,6 +9,8 @@ namespace AElf.Contracts.CRTContract
     {
         public override Empty CRT_init(Empty input)
         {
+            State.TokenContract.Value =
+                Context.GetContractAddressByName(SmartContractConstants.TokenContractSystemName);
             return new Empty();
         }
         
@@ -17,6 +21,14 @@ namespace AElf.Contracts.CRTContract
             var HashOfCreater = HashHelper.ComputeFrom(input.CRTCreator);
             var HashValue = HashHelper.ConcatAndCompute(HashOfContent,HashOfCreater);
             //生成CRT_Info
+            State.TokenContract.TransferFrom.Send(new TransferFromInput{
+                From = input.CRTOwner,
+                To = Context.Self,
+                Amount = 10000,
+                Symbol = "ELF",
+                Memo = "update"
+            });
+            
             var nCRTInfo = new CRT_Info{
                 CRTID = HashValue,
                 CRTCreator = input.CRTCreator,

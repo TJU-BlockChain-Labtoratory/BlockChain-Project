@@ -77,16 +77,9 @@ namespace AElf.Contracts.CRContract
             State.TokenContract.Approve.Send(new ApproveInput{
                 Amount = 10000,
                 Symbol = "ELF",
-                Spender = Context.Self
+                Spender = State.CRTContract.Value
             });
             
-            State.TokenContract.TransferFrom.Send(new TransferFromInput{
-                From = input.CRTOwner,
-                To = Context.Self,
-                Amount = 10000,
-                Symbol = "ELF",
-                Memo = "update"
-            });
             //生成CRT
             State.CRTContract.CRT_Create.Send(new AElf.Contracts.CRTContract.CreateInput{
                 CRTCreator = input.CRTCreator,

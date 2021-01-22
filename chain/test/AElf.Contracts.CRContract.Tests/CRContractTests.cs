@@ -16,10 +16,7 @@ namespace AElf.Contracts.CRContract
         public async Task Test()
         {
             // Get a stub for testing.
-            var stub = GetCRContractStub(SampleAccount.Accounts.First().KeyPair);
-            var tokenStub =
-                GetTester<TokenContractContainer.TokenContractStub>(
-                    GetAddress(TokenSmartContractAddressNameProvider.StringName), SampleAccount.Accounts.First().KeyPair);
+
             await stub.CR_Register.SendAsync(addr);
 
             await stub.CR_Login.SendAsync(addr);
@@ -31,6 +28,12 @@ namespace AElf.Contracts.CRContract
                 Symbol = "ELF",
                 Amount = 100000000_00000000
             });
+            var balance = await tokenStub.GetBalance.CallAsync(new GetBalanceInput
+            {
+                Owner = addr,
+                Symbol = "ELF"
+            });
+            balance.Balance.ShouldBe(100000000_00000000);
             
             var test = await stub.CR_Upload.SendAsync(new UploadData
             {
@@ -39,7 +42,13 @@ namespace AElf.Contracts.CRContract
                 CRTOwner = addr,
                 CRTStatus = 0
             });
-                
+            var allowence = await userTokenStub.GetAllowance.CallAsync(new GetAllowanceInput
+            {
+                Owner = addr,
+                Spender = CRContractAddress,
+                Symbol = "ELF"
+            });
+            allowence.Allowance.ShouldBe(10000);    
             test.Output.ShouldBe(
                 new SInt64Value
                 {

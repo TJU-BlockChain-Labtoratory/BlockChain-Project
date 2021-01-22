@@ -1,6 +1,9 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AElf.Contracts.MultiToken;
 using AElf.ContractTestBase.ContractTestKit;
+using AElf.Kernel.Token;
 using AElf.Types;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
@@ -16,7 +19,34 @@ namespace AElf.Contracts.CRTContract
         {
             // Get a stub for testing.
             
-            var stub = GetCRTContractStub(keyPair);
+            await stub.CRT_init.SendAsync(new Empty());
+            await tokenStub.Transfer.SendAsync(new MultiToken.TransferInput
+            {
+                To = addr,
+                Symbol = "ELF",
+                Amount = 100000000_00000000
+            });
+            var balance = await tokenStub.GetBalance.CallAsync(new GetBalanceInput
+            {
+                Owner = addr,
+                Symbol = "ELF"
+            });
+            balance.Balance.ShouldBe(100000000_00000000);
+            await userTokenStub.Approve.SendAsync(new MultiToken.ApproveInput
+            {
+                Amount = 10000,
+                Spender = CRTContractAddress,
+                Symbol = "ELF"
+            });
+            var allowence = await userTokenStub.GetAllowance.CallAsync(new GetAllowanceInput
+            {
+                Owner = addr,
+                Spender = CRTContractAddress,
+                Symbol = "ELF"
+            });
+
+            allowence.Spender.ShouldBe(CRTContractAddress);
+            allowence.Allowance.ShouldBe(10000);
             var firstCRTHash = await stub.CRT_Create.SendAsync(new CreateInput
             {
                 CRTContent = "ASDF",
