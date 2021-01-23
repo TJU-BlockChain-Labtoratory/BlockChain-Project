@@ -14,5 +14,8 @@ namespace AElf.Contracts.CRContract
 
         public MappedState<Address, Identity> UserInfo { get; set; }
         
+        public MappedState<Hash,CRT> CRT_Base { get; set; }
+        
+        public MappedState<Address,CRT_List> CRT_Account { get; set; }
     }
 }

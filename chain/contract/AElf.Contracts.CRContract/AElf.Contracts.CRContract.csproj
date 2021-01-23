@@ -20,8 +20,5 @@
         <ContractReference Include="..\..\protobuf\token_contract.proto">
             <Link>Protobuf/Proto/token_contract.proto</Link>
         </ContractReference>
-        <ContractReference Include="..\..\protobuf\cr_token_contract.proto">
-            <Link>Protobuf/Proto/cr_token_contract.proto</Link>
-        </ContractReference>
     </ItemGroup>
 </Project>

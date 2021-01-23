@@ -23,6 +23,22 @@ service CRContract {
 
     rpc CR_Delete(aelf.Address) returns (aelf.SInt64Value){ }//用户注销
 
+    rpc isApproved (ApproveReqInput) returns (google.protobuf.BoolValue) {//查看是否被授予操作权限
+        option (aelf.is_view) = true;
+    }
+
+    rpc isAuthorized (AuthorizeInput) returns (google.protobuf.BoolValue) {//查看是否被授权
+        option (aelf.is_view) = true;
+    }
+
+    rpc getAllInfo (aelf.Hash) returns (CRT_Info) {//查看存储信息
+        option (aelf.is_view) = true;
+    }
+
+    rpc getAllCRTs (aelf.Address) returns (CRT_List) {//查看存储信息
+        option (aelf.is_view) = true;
+    }
+    
     rpc Get_User_Info(aelf.Address) returns (Identity){
         option (aelf.is_view) = true;
     }
@@ -46,4 +62,33 @@ message TransferData{
     aelf.Address addr = 1;
     aelf.Hash CRT_ID = 2;
     sint64 price = 3;
+}
+
+message CRT_Info {//版权资产证明
+    aelf.Hash CRT_ID = 1;//只读，唯一标识，被用于标识对应版权。
+    aelf.Address CRT_Creator = 2;//只读，地址，标识此Token所对应作品的创造者。
+    aelf.Address CRT_Owner = 3;//地址，标识此Token财产权的所有者。
+    string CRT_Content = 4;//只读，地址，指向该token对应作品数据所存储的链接位置。
+    sint64 CRT_Status = 5;//状态属性，暂时包括正常、被质押和被销毁。
+}
+
+message CRT {//版权资产证明
+    CRT_Info info = 1;//数据结构（下文所描述的），代表着CRT的基本信息
+    repeated aelf.Address CRT_Authorized = 2;//地址数组，标识被授权使用该Token的全部用户（被许可人）。
+    repeated aelf.Address CRT_Approved = 3;//地址数组，记录所有有权修改该CRT属性（除去只读属性）的用户（合约本身也需要Approve后才能操作属性）
+    //aelf.Address CRT_Pledge_Info = 4;//地址，仅在CR_Status为被质押时有效。存储版权被质押信息的交易ID。
+}
+
+message CRT_List{
+    repeated aelf.Hash CRT_Set = 1;
+}
+
+message AuthorizeInput{
+    aelf.Hash CRT_ID = 1;
+    aelf.Address addr = 2;
+}
+
+message ApproveReqInput{
+    aelf.Hash CRT_ID = 1;
+    aelf.Address addr = 2;
 }

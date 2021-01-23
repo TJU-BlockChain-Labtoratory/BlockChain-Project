@@ -7,16 +7,15 @@ using AElf.Types;
 
 namespace AElf.Contracts.CRContract
 {
-    public class CRContract : CRContractContainer.CRContractBase
+    public partial class CRContract : CRContractContainer.CRContractBase
     {
         private void CR_Initial()
         {
             Assert(!State.Initialized.Value, "Already initialized.");
-            var hash = HashHelper.ComputeFrom("AElf.ContractNames.Election");
+            var hash = HashHelper.ComputeFrom("AElf.ContractNames.CRToken");
             State.TokenContract.Value =
                 Context.GetContractAddressByName(SmartContractConstants.TokenContractSystemName);
-            State.CRTContract.Value = 
-                Context.GetContractAddressByName(hash.Value.ToBase64());
+
             // Create and issue token of this contract.
             State.Initialized.Value = true;
         }
@@ -32,6 +31,7 @@ namespace AElf.Contracts.CRContract
                 Online = false
             };
             State.UserInfo[input] = user;
+            State.CRT_Account[input] = new CRT_List();
             return new SInt64Value{Value = 0};            
         }
 
@@ -73,21 +73,10 @@ namespace AElf.Contracts.CRContract
             //验证输入数据（包括Owner是否就是sender，Creator是否存在，Context是否合法（尚未实现），status是否合法）
             Assert(input.CRTStatus >= 0 && input.CRTStatus <= 2 , "invalid status");
             
-            //转移手续费
-            State.TokenContract.Approve.Send(new ApproveInput{
-                Amount = 10000,
-                Symbol = "ELF",
-                Spender = State.CRTContract.Value
-            });
-            
-            //生成CRT
-            State.CRTContract.CRT_Create.Send(new AElf.Contracts.CRTContract.CreateInput{
-                CRTCreator = input.CRTCreator,
-                CRTOwner = input.CRTOwner,
-                CRTContent = input.CRTContent,
-                CRTStatus = input.CRTStatus
-            });
-            return new SInt64Value{Value = 0};           
+            //转移手续费与生成CRT
+            var ret = CRT_Create(input.CRTCreator, input.CRTOwner, input.CRTContent, input.CRTStatus);
+
+            return new SInt64Value{Value = ret};           
         }
         
         //买家发起交易
@@ -97,7 +86,7 @@ namespace AElf.Contracts.CRContract
             Assert(State.UserInfo[Context.Sender] != null,"invalid user");
             var user = State.UserInfo[Context.Sender];
             Assert(user.Online == true, "not login");
-            CRTContract.CRT_Info info = State.CRTContract.getAllInfo.Call(input.CRTID);
+            var info = State.CRT_Base[input.CRTID].Info;
 
             //验证输入数据（包括addr是否存在（尚未实现），CRT_ID是否存在，price是否合法）
             Assert(info != null,"CRT_ID not exist");
@@ -116,17 +105,13 @@ namespace AElf.Contracts.CRContract
             });
             
             //改变CRT所有者
-            State.CRTContract.CRT_ChangeOwner.Send(new AElf.Contracts.CRTContract.TransferInput{
-                CRTID = input.CRTID,
-                Addr = input.Addr
-            });
-            return new SInt64Value{Value = 0};
+            var ret = CRT_ChangeOwner(input.CRTID, input.Addr);
+            
+            return new SInt64Value{Value = ret};
         }
 
-        public override Identity Get_User_Info(Address input)
-        {
-            Assert(State.UserInfo[input] != null , "invalid input");
-            return  State.UserInfo[input];
-        }
+        
+        
+        
     }
 }

@@ -34,7 +34,12 @@ namespace AElf.Contracts.CRContract
                 Symbol = "ELF"
             });
             balance.Balance.ShouldBe(100000000_00000000);
-            
+            await userTokenStub.Approve.SendAsync(new ApproveInput
+            {
+                Amount = 10000,
+                Spender = CRContractAddress,
+                Symbol = "ELF"
+            });
             var test = await stub.CR_Upload.SendAsync(new UploadData
             {
                 CRTContent = "ASDF",
@@ -48,12 +53,16 @@ namespace AElf.Contracts.CRContract
                 Spender = CRContractAddress,
                 Symbol = "ELF"
             });
-            allowence.Allowance.ShouldBe(10000);    
             test.Output.ShouldBe(
                 new SInt64Value
                 {
                     Value = 0
                 });
+
+            var ret = await stub.getAllCRTs.CallAsync(addr);
+            var hashcode = ret.CRTSet.First();
+            var result = await stub.getAllInfo.CallAsync(hashcode);
+            result.CRTContent.ShouldBe("ASDF");
             // Use CallAsync or SendAsync method of this stub to test.
             // await stub.Hello.SendAsync(new Empty())
 
