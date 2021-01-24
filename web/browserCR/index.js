@@ -34,7 +34,7 @@ function initDomEvent(multiTokenContract, CRContract) {
   const price = document.getElementById("price");
   const div_create = document.getElementById("create");
   const div_transfer = document.getElementById("transfer");
-  const Approve = document.getElementById("Approve");
+  const CheckCR = document.getElementById("CheckCR");
   let txId = 0;
   let contractAddr = CRContract.address;
   // Update your card number,Returns the change in the number of your cards
@@ -95,14 +95,14 @@ function initDomEvent(multiTokenContract, CRContract) {
       console.log(err);
     });
   };
-  Approve.onclick = () => {
-    multiTokenContract.Approve({
-      symbol: 'ELF',
-      spender: contractAddr,
-      amount: 88000000000000000
-    })
+  CheckCR.onclick = function() {
+    CRContract.getAllCRTs.call(wallet.address)
     .then(result=>{
       console.log(result);
+      CRContract.getAllInfo.call(result.CRT_Set[0])
+      .then(ret =>{
+        console.log(ret)
+      })
     })
     .catch(err => {
       console.log(err);
@@ -112,20 +112,27 @@ function initDomEvent(multiTokenContract, CRContract) {
   CR_Create.onclick = () => {
     CR_Create.innerText = 'Creating...';
     CR_Create.disabled = true;
-    CRContract.CR_Upload({
-      CRT_Creater: CR_Creator.value,
-      CRT_Owner: CR_Owner.value,
-      CRT_Content: 'Content_test',
-      CRT_Status: CR_Status.value
+    multiTokenContract.Approve({
+      symbol: 'ELF',
+      spender: contractAddr,
+      amount: 10000
     })
-    .then(result => {
-      setTimeout(() => {
-        CR_Create.innerText = 'CR_Create';
-        CR_Create.disabled = false;
-        console.log("result: " +result);
-        console.log(result.TransactionId);
-      }, 1000)
-    })
+    .then(
+      CRContract.CR_Upload({
+        CRT_Creator: CR_Creator.value,
+        CRT_Owner: CR_Owner.value,
+        CRT_Content: 'Content_test',
+        CRT_Status: CR_Status.value
+      })
+      .then(result => {
+        setTimeout(() => {
+          CR_Create.innerText = 'CR_Create';
+          CR_Create.disabled = false;
+          console.log("result: " +result);
+          console.log(result.TransactionId);
+        }, 1000)
+      })
+    )
     .catch(err => {
       console.log(err);
     })
