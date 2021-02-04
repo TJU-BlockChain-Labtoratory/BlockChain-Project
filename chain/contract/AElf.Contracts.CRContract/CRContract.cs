@@ -109,8 +109,95 @@ namespace AElf.Contracts.CRContract
             
             return new SInt64Value{Value = ret};
         }
-
         
+        public override SInt64Value CR_Pledge(PledgeData input){
+
+            //验证发起者账户是否存在且已登陆
+            Assert(State.UserInfo[Context.Sender] != null,"invalid user");
+            var user = State.UserInfo[Context.Sender];
+            Assert(user.Online == true, "not login");
+            var CRT = State.CRT_Base[input.CRTID];
+            var info = CRT.Info;
+
+            //验证输入数据（包括CRT_Pledge_Info.pledgee和CRT_Pledge_Info.pledgor是否存在（尚未实现），CRT_ID是否存在，price是否合法）
+            Assert(info != null,"CRT_ID not exist");//验证CRT_ID是否存在且处于可以被质押的状态
+            Assert(info.CRTStatus == 0, "CRT_ID status error"); //如何返回错误码3
+            Assert(input.PledgeInfo.Price > 0 , "invalid price");
+            //判断Pledgee和Pledgor用户存在（如果不存在，则输出输入信息错误码4）
+            //Time_limit是否正常
+            
+
+            //验证额外信息（状态正常、用户是发起者、Approve和Authorized为空(尚未实现)）//Approve不用为空吧，只需要Authorized为空就行
+            Assert(info.CRTStatus == 2 , "invalid status");
+            Assert(Context.Sender == info.CRTOwner , "invalid sender");
+            Assert(CRT.CRTAuthorized.Count == 0 ,"CRT is Authorized to other users." );
+            
+            //为合约本身授权（以下直到UnApprove，都是原子操作）
+            CRT_Approve( input.CRTID, Context.Self );
+            
+            //合约需要调用PledgeInfo.Pledgee的代币发起交易，需要PledgeInfo.Pledgee提前为合约授权
+            State.TokenContract.Approve.Send( new ApproveInput{
+                Amount = input.PledgeInfo.Price,
+                Symbol = "ELF",
+                Spender = Context.Self
+            } );
+
+            State.TokenContract.TransferFrom.Send(new TransferFromInput{
+                From = input.PledgeInfo.Pledgee,
+                To = input.PledgeInfo.Pledgor,
+                Amount = input.PledgeInfo.Price,
+                Symbol = "ELF",
+                Memo = "Pledged"
+            });
+            
+            //检查输入上面交易是否完成（未完成）
+            //如果完成获取交易ID（未完成）
+            var txID = Context.TransactionId;//本语句待定是否正确
+            var newPledgeInfo = input.PledgeInfo;
+            newPledgeInfo.TxID = txID;
+            
+            var ret = CRT_Pledge( input.CRTID, newPledgeInfo);
+            CRT_UnApprove(input.CRTID, Context.Self);
+            
+            return new SInt64Value{Value = ret};
+        }
+
+        public override SInt64Value CR_UnPledge(Hash CRT_ID)
+        {
+            //验证发起者账户是否存在且已登陆
+            Assert(State.UserInfo[Context.Sender] != null,"invalid user");
+            var user = State.UserInfo[Context.Sender];
+            Assert(user.Online == true, "not login");
+            var CRT = State.CRT_Base[CRT_ID];
+            var info = CRT.Info;
+            
+            //验证输入数据（CRT_ID是否存在）
+            Assert(info != null,"CRT_ID not exist");//验证CRT_ID是否存在且处于可以被质押的状态
+            Assert(info.CRTStatus == 1, "CRT_ID is not Pledged"); //如何返回错误码3
+            
+            //验证额外信息（用户是发起者）
+            Assert(Context.Sender == info.CRTOwner , "invalid sender");
+            
+            CRT_Approve( CRT_ID, Context.Self );
+            
+            State.TokenContract.Approve.Send( new ApproveInput{
+                Amount = CRT.PledgeInfo.Price,
+                Symbol = "ELF",
+                Spender = Context.Self
+            } );
+
+            //检查输入上面交易是否完成（未完成）
+            //如果完成获取交易ID（未完成）
+            var txID = Context.TransactionId;//本语句待定是否正确
+
+            var ret = CRT_UnPledge( CRT_ID );
+
+            CRT_UnApprove( CRT_ID, Context.Self);
+            
+            return new SInt64Value{Value = ret};
+        }
+
+
         
         
     }

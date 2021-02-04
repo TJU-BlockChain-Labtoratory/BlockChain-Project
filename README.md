@@ -30,8 +30,16 @@
   - CRT_Creator：只读，地址，标识此Token所对应作品的创造者。
   - CRT_Owner：地址，标识此Token财产权的所有者。
   - CRT_Content：只读，地址，指向该token对应作品数据所存储的链接位置。
-  - CRT_Status：状态属性，暂时包括正常、被质押和被销毁。
+  - CRT_Status：状态属性，暂时包括正常（0）、被质押（1）和被销毁（2）。
   - CRT_Pledge_Info：地址，仅在CR_Status为被质押时有效。存储版权被质押信息的交易ID。
+
+- ##### message CRT_Pledge_Info:
+  - Pledgee(质权人)
+  - Pledgor(出质人)
+  - Price(质押金额)
+  - Time_limit（质押结束时间，质押结束时间到，如果还没有赎回，则将版权的拥有权从出质人转变为质权人）
+  - txID（版权质押或版权赎回对应的交易ID）
+  - Notice(备注)
 
 - ##### message CRT_User： <!--暂时不实现，仅用地址代替-->
 // 这一部分数据，建议存在链外。数据量小的话，可以考虑存在链上。但是做链外的话，有额外的开发量，你们自己决定咯。
@@ -88,11 +96,12 @@
     
   - ##### CRT_Pledge(address addr , Hash txID, uint256 CRT_ID)
     
-    - 用于质押版权。
-    - 仅能由该CRT_ID所对应CRT中CRT_Info的CRT_Owner或在CRT_Approved中的用户发出，任何其他人发出将被拒绝，并返回身份错误码2。。
-    - 修改CRT_ID所对应CRT中CRT_Info的CRT_Status成被质押，将CRT_Pledge_Info的值修改成txID，将CRT_Owner修改成addr。
-    - 调用User_addCRT()，修改CRT_Owner所对应的CRT_User的状态。
-    - 如果成功则返回0，否则返回系统错误码1。
+    - 用于质押版权
+    - 仅能由该CRT_ID所对应CRT中CRT_Info的CRT_Owner或在CRT_Approved中的用户发出，任何其他人发出将被拒绝，并返回身份错误码2
+    - ////修改CRT_ID所对应CRT中CRT_Info的CRT_Status成被质押，将CRT_Pledge_Info的值修改成Info，将CRT_Owner修改成 Info.Pledgee////
+    - 调用User_addCRT()，修改CRT_Owner所对应的CRT_User的状态
+    - //////存在时限，定期检查，在超时时调用CRT_ChangeOwner/////
+    - 如果成功则返回0，否则返回系统错误码1
     
   - ##### CRT_UnPledge(address addr,uint256 CRT_ID)
     
@@ -244,6 +253,32 @@
   - ##### 存证授权（CR_Authorize）：即版权授权过程，只能由版权所有者进行，为版权添加新的被许可人。尚未涉及完成。
 
   - ##### 存证质押（CR_Pledge）:即版权授权过程，只能由版权所有者进行，将版权转移至质押人手中，并设置质押合同信息。尚未涉及完成。
+  - ###### CR_Pledge()：版权质押的实现函数
+
+    - 输入CRT标识CRT_ID以及版权质押的信息CRT_Pledge_Info
+    - 判断发起者的账户是否存在且已登录
+    - 验证输入的CRT_ID是否存在且处于可以被质押的状态（如果不是，抛出CRT状态错误码3）
+    - 发出CRT_getOwner()，获取当前所有者old_addr并与调用者(Context.Sender)进行比较，如果不同则拒绝操作，返回身份错误码2。
+    - 判断CRT_Pledge_Info里的信息是否正确，如Pledgee和Pledgor用户存在（如果不存在，则输出输入信息错误码4），Time_limit是否正常，（需要判断用户账户余额是否足够支付交易金额吗？？)，(txID为空时必须的条件吗，如果为空，则说明质押赎回的时候要将txID信息置空)，如果中间有问题出错，则输出输入信息错误码4
+    - 然后发出CRT_Approve()，授予合约操控CRT的权利，如果失败则退出，返回系统错误码1。
+    - 在此之后，一旦退出则一定要发出CRT_UnApprove，防止赋予合约过多的权利。
+    - 合约发出TransferFrom()，返回的交易ID记为txID,将CRT_Pledge_Info.txID修改为txID,，将质押金CRT_Pledge_Info.Price从CRT_Pledge_Info.Pledgee转至CRT_Pledge_Info.Pledgor(原CRT拥有者的地址)。如果失败则退出，返回系统错误码1。
+    - 合约发出CRT_Pledge(CRT_Pledge_Info, uint256 CRT_ID)，修改CRT信息，如果失败则退出，返回系统错误码1
+    - 输出为结果信息（整形），如果导致没有任何问题则返回0。
+  
+  - ###### CR_Unpledge()：版权赎回的实现函数
+
+    - 输入CRT_ID
+    - 判断发起者的账户是否存在且已登录
+    - 验证输入的CRT_ID是否存在且处于被质押的状态（如果不是，抛出CRT状态错误码3）
+    - 首先发出CRT_getOwner()，获取CRT质权人old_addr并与调用者(Context.Sender)进行对比，如果发现不同，则拒绝操作，返回身份错误码2
+    - 然后发出CRT_Approve()，授予合约操控CRT的权利，如果失败则退出，返回系统错误码1。
+    - 在此之后，一旦退出则一定要发出CRT_UnApprove，防止赋予合约过多的权利。
+    - 合约发出TransferFrom()，返回的交易ID记为txID,将CRT_Pledge_Info.txID修改为txID,，将质押金CRT_Pledge_Info.Price从CRT_Pledge_Info.Pledgor转至CRT_Pledge_Info.Pledgee。如果失败则退出，返回系统错误码1。
+    - 合约发出CRT_UnPledge(CRT_Pledge_Info.Pledgor, uint256 CRT_ID)，修改CRT信息，如果失败则退出，返回系统错误码1
+    - 输出为结果信息（整形），如果导致没有任何问题则返回0。
+
+  - ###### 需要一个函数间隔执行，检查被质押的CRT中的时间年限，对于时间年限到的CRT，CRT归质权人所有，并且清除CRT的质押状态，恢复正常状态
 
 - ##### 合约内部逻辑
 

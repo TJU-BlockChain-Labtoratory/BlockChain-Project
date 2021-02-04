@@ -65,6 +65,47 @@ namespace AElf.Contracts.CRContract
             return 0;
         }
 
+        public int CRT_Pledge( Hash CRT_ID, CRT_Pledge_Info PledgeInfo )
+        {
+            var CRTfetch = State.CRT_Base[CRT_ID];
+            Assert(CRTfetch != null , "CRT not exist!");
+            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            //发起者是CRT拥有者或者Approved者
+            if ( !(CRTfetch.Info.CRTOwner == Context.Sender || CRTfetch.CRTApproved.Contains(Context.Sender)) )
+            {
+                return 2;//身份错误码2
+            }
+            
+            CRTfetch.Info.CRTStatus = 1;
+            CRTfetch.PledgeInfo = PledgeInfo;
+            State.CRT_Base[CRT_ID] = CRTfetch; //更新CRT的信息
+
+            var ret = CRT_ChangeOwner( CRT_ID, PledgeInfo.Pledgee );//如果使用这个函数，那么原来版权人账号就不再有这个版权的任何标记，
+                                                          //这不符合常理，应该在原版权人账号也记录自己质押出去的版权
+            return ret;
+        }
+
+        public int CRT_UnPledge( Hash CRT_ID )
+        {
+            var CRTfetch = State.CRT_Base[CRT_ID];
+            Assert(CRTfetch != null , "CRT not exist!");
+            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            //发起者是CRT拥有者或者Approved者
+            if ( !(CRTfetch.Info.CRTOwner == Context.Sender || CRTfetch.CRTApproved.Contains(Context.Sender)) )
+            {
+                return 2;//身份错误码2
+            }
+            
+            CRTfetch.Info.CRTStatus = 0;
+            var Pledgor = CRTfetch.PledgeInfo.Pledgor;
+            CRTfetch.PledgeInfo = null; //清除掉质押信息
+            State.CRT_Base[CRT_ID] = CRTfetch; //更新CRT的信息
+            
+            var ret = CRT_ChangeOwner( CRT_ID, Pledgor );
+
+            return ret;
+        }
+
         public int CRT_ChangeOwner(Hash CRT_ID,Address newOwner)
         {
             var CRTfetch = State.CRT_Base[CRT_ID];
