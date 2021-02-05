@@ -97,11 +97,11 @@ namespace AElf.Contracts.CRContract
             }
             
             CRTfetch.Info.CRTStatus = 0;
-            var Pledgor = CRTfetch.PledgeInfo.Pledgor;
+            var Pledger = CRTfetch.PledgeInfo.Pledger;
             CRTfetch.PledgeInfo = null; //清除掉质押信息
             State.CRT_Base[CRT_ID] = CRTfetch; //更新CRT的信息
             
-            var ret = CRT_ChangeOwner( CRT_ID, Pledgor );
+            var ret = CRT_ChangeOwner( CRT_ID, Pledger );
 
             return ret;
         }

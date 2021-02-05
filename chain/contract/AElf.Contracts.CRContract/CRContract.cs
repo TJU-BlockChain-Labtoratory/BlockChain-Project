@@ -72,7 +72,7 @@ namespace AElf.Contracts.CRContract
             Assert(user.Online == true, "not login");
             //验证输入数据（包括Owner是否就是sender，Creator是否存在，Context是否合法（尚未实现），status是否合法）
             Assert(input.CRTStatus >= 0 && input.CRTStatus <= 2 , "invalid status");
-            
+            Assert(Context.Sender == input.CRTOwner , "invalid sender");
             //转移手续费与生成CRT
             var ret = CRT_Create(input.CRTCreator, input.CRTOwner, input.CRTContent, input.CRTStatus);
 
@@ -119,11 +119,13 @@ namespace AElf.Contracts.CRContract
             var CRT = State.CRT_Base[input.CRTID];
             var info = CRT.Info;
 
-            //验证输入数据（包括CRT_Pledge_Info.pledgee和CRT_Pledge_Info.pledgor是否存在（尚未实现），CRT_ID是否存在，price是否合法）
+            //验证输入数据（包括CRT_Pledge_Info.pledgee和CRT_Pledge_Info.Pledger是否存在（尚未实现），CRT_ID是否存在，price是否合法）
             Assert(info != null,"CRT_ID not exist");//验证CRT_ID是否存在且处于可以被质押的状态
             Assert(info.CRTStatus == 0, "CRT_ID status error"); //如何返回错误码3
             Assert(input.PledgeInfo.Price > 0 , "invalid price");
-            //判断Pledgee和Pledgor用户存在（如果不存在，则输出输入信息错误码4）
+            //判断Pledgee和Pledger用户存在（如果不存在，则输出输入信息错误码4）
+            Assert(State.UserInfo[input.PledgeInfo.Pledgee] != null,"invalid Pledgee");
+            Assert(State.UserInfo[input.PledgeInfo.Pledger] != null,"invalid Pledger");
             //Time_limit是否正常
             
 
@@ -136,15 +138,9 @@ namespace AElf.Contracts.CRContract
             CRT_Approve( input.CRTID, Context.Self );
             
             //合约需要调用PledgeInfo.Pledgee的代币发起交易，需要PledgeInfo.Pledgee提前为合约授权
-            State.TokenContract.Approve.Send( new ApproveInput{
-                Amount = input.PledgeInfo.Price,
-                Symbol = "ELF",
-                Spender = Context.Self
-            } );
-
             State.TokenContract.TransferFrom.Send(new TransferFromInput{
                 From = input.PledgeInfo.Pledgee,
-                To = input.PledgeInfo.Pledgor,
+                To = input.PledgeInfo.Pledger,
                 Amount = input.PledgeInfo.Price,
                 Symbol = "ELF",
                 Memo = "Pledged"

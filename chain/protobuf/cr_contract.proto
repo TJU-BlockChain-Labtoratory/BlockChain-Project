@@ -70,7 +70,7 @@ message TransferData{
 
 message CRT_Pledge_Info{
     aelf.Address pledgee = 1; //质权人
-    aelf.Address pledgor = 2; //出质人
+    aelf.Address Pledger = 2; //出质人
     sint64 price = 3;//质押价格
     aelf.Hash txID = 4; //质押交易ID
     string notice = 5;//备注

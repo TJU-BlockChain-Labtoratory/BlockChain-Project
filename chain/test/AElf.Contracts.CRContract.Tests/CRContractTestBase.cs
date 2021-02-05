@@ -26,14 +26,27 @@ namespace AElf.Contracts.CRContract
                 .Create<TokenContractContainer.TokenContractStub>(TokenContractAddress,
                     senderKeyPair);
         }
-        internal CRContractContainer.CRContractStub stub => GetCRContractStub(keyPair);
-        internal TokenContractContainer.TokenContractStub tokenStub =>
+        
+        internal TokenContractContainer.TokenContractStub TokenContractStub =>
             GetTokenContractStub(SampleAccount.Accounts.First().KeyPair);
         
-        internal ECKeyPair keyPair = SampleAccount.Accounts.Last().KeyPair;
-        internal Address addr => Address.FromPublicKey(keyPair.PublicKey);
+        internal CRContractContainer.CRContractStub CRContractStub =>
+            GetCRContractStub(SampleAccount.Accounts.First().KeyPair);
+
+        internal ECKeyPair AliceKeyPair { get; set; } = SampleAccount.Accounts.Last().KeyPair;
+        internal ECKeyPair BobKeyPair { get; set; } = SampleAccount.Accounts.Reverse().Skip(1).First().KeyPair;
+        internal Address AliceAddress => Address.FromPublicKey(AliceKeyPair.PublicKey);
+        internal Address BobAddress => Address.FromPublicKey(BobKeyPair.PublicKey);
         
-        internal TokenContractContainer.TokenContractStub userTokenStub =>
-            GetTokenContractStub(keyPair);
+        internal CRContractContainer.CRContractStub AliceCRContractStub =>
+            GetCRContractStub(AliceKeyPair);
+
+        internal TokenContractContainer.TokenContractStub AliceTokenContractStub => GetTokenContractStub(AliceKeyPair);
+
+        internal CRContractContainer.CRContractStub BobCRContractStub =>
+            GetCRContractStub(BobKeyPair);
+
+        internal TokenContractContainer.TokenContractStub BobTokenContractStub => GetTokenContractStub(BobKeyPair);
+
     }
 }
