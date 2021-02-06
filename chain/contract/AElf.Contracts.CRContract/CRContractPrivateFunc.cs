@@ -45,29 +45,11 @@ namespace AElf.Contracts.CRContract
             return 0;
         }
         
-        private int  CRT_Approve(Hash CRT_ID,Address spender)
-        {
-            var CRTfetch = State.CRT_Base[CRT_ID];
-            Assert(CRTfetch != null , "not exist!");
-            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
-            CRTfetch.CRTApproved.Add(spender);
-            State.CRT_Base[CRT_ID] = CRTfetch;
-            return 0;
-        }
+        
 
-        public int CRT_UnApprove(Hash CRT_ID,Address spender)
+        public int CRT_Pledge(PledgeData input)
         {
-            var CRTfetch = State.CRT_Base[CRT_ID];
-            Assert(CRTfetch != null , "not exist!");
-            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
-            CRTfetch.CRTApproved.Remove(spender);
-            State.CRT_Base[CRT_ID] = CRTfetch;
-            return 0;
-        }
-
-        public int CRT_Pledge( Hash CRT_ID, CRT_Pledge_Info PledgeInfo )
-        {
-            var CRTfetch = State.CRT_Base[CRT_ID];
+            var CRTfetch = State.CRT_Base[input.CRTID];
             Assert(CRTfetch != null , "CRT not exist!");
             Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
             //发起者是CRT拥有者或者Approved者
@@ -76,16 +58,22 @@ namespace AElf.Contracts.CRContract
                 return 2;//身份错误码2
             }
             
+            //修改pledgeInfo
+            var PledgeInfo = input.PledgeInfo;
+            PledgeInfo.TxID = Context.TransactionId;
+            
+            //修改CRT
             CRTfetch.Info.CRTStatus = 1;
             CRTfetch.PledgeInfo = PledgeInfo;
-            State.CRT_Base[CRT_ID] = CRTfetch; //更新CRT的信息
-
-            var ret = CRT_ChangeOwner( CRT_ID, PledgeInfo.Pledgee );//如果使用这个函数，那么原来版权人账号就不再有这个版权的任何标记，
-                                                          //这不符合常理，应该在原版权人账号也记录自己质押出去的版权
-            return ret;
+            
+            State.CRT_Base[input.CRTID] = CRTfetch; //更新CRT的信息
+            State.CRT_Account[PledgeInfo.Pledgee].CRTSet.Add(input.CRTID);//将token添加至质权人账户中，不从出质人手中移除。
+            //一旦出质人检查版权时，会由于pledge数组不为空导致操作失败
+            
+            return 0;
         }
 
-        public int CRT_UnPledge( Hash CRT_ID )
+        public int CRT_UnPledge( Hash CRT_ID)
         {
             var CRTfetch = State.CRT_Base[CRT_ID];
             Assert(CRTfetch != null , "CRT not exist!");
@@ -97,13 +85,13 @@ namespace AElf.Contracts.CRContract
             }
             
             CRTfetch.Info.CRTStatus = 0;
-            var Pledger = CRTfetch.PledgeInfo.Pledger;
+            
+            
+            State.CRT_Account[CRTfetch.PledgeInfo.Pledgee].CRTSet.Remove(CRT_ID);//将token从质权人账户中移除。
             CRTfetch.PledgeInfo = null; //清除掉质押信息
             State.CRT_Base[CRT_ID] = CRTfetch; //更新CRT的信息
-            
-            var ret = CRT_ChangeOwner( CRT_ID, Pledger );
 
-            return ret;
+            return 0;
         }
 
         public int CRT_ChangeOwner(Hash CRT_ID,Address newOwner)
@@ -112,9 +100,9 @@ namespace AElf.Contracts.CRContract
             Assert(CRTfetch != null , "not exist!");            
             var oldOwner = CRTfetch.Info.CRTOwner;
             CRTfetch.Info.CRTOwner = newOwner;
-            State.CRT_Base[CRT_ID] = CRTfetch;
-            State.CRT_Account[newOwner].CRTSet.Add(CRTfetch.Info.CRTID);
-            State.CRT_Account[oldOwner].CRTSet.Remove(CRTfetch.Info.CRTID);
+            State.CRT_Base[CRT_ID] = CRTfetch;//更新状态
+            State.CRT_Account[newOwner].CRTSet.Add(CRTfetch.Info.CRTID);//将token添加至新所有者账户中
+            State.CRT_Account[oldOwner].CRTSet.Remove(CRTfetch.Info.CRTID);//将token从旧所有者账户中移除
             return 0;
         }
 

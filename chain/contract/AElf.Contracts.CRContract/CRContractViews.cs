@@ -35,6 +35,12 @@ namespace AElf.Contracts.CRContract
             return CRTfetch.Info;
         }
         
+        public override CRT_Pledge_Info getPledgeInfo(Hash input)
+        {
+            var CRTfetch = State.CRT_Base[input];
+            return CRTfetch.PledgeInfo;
+        }
+        
         public override CRT_List getAllCRTs(Address input)
         {
             return State.CRT_Account[input];

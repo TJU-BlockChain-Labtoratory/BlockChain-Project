@@ -114,5 +114,121 @@ namespace AElf.Contracts.CRContract
             result.CRTContent.ShouldBe("ASDF");
             
         }
+        
+        [Fact]
+        public async Task Pledge()
+        {
+            await UpLoad();
+            await BobTokenContractStub.Approve.SendAsync(new ApproveInput
+            {
+                Amount = 1000000,
+                Spender = CRContractAddress,
+                Symbol = "ELF"
+            });
+            var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            var Ahashcode = Aret.CRTSet.First();
+            var pledge = new CRT_Pledge_Info
+            {
+                Notice = "10 days",
+                Pledgee = BobAddress,
+                Pledger = AliceAddress,
+                Price = 2000,
+                TxID = new Hash()
+            };
+            var test = await AliceCRContractStub.CR_Pledge.SendAsync(new PledgeData
+            {
+               PledgeInfo = pledge,
+               CRTID = Ahashcode
+            });
+            test.Output.ShouldBe(new SInt64Value
+            {
+                Value = 0
+            });
+
+            var Bret = await CRContractStub.getAllCRTs.CallAsync(BobAddress);
+            var Bhashcode = Bret.CRTSet.First();
+            var result = await CRContractStub.getPledgeInfo.CallAsync(Bhashcode);
+            result.Pledger.ShouldBe(AliceAddress);
+            var r = await CRContractStub.getAllInfo.CallAsync(Bhashcode);
+            r.CRTStatus.ShouldBe(1);
+        }
+        
+        [Fact]
+        public async Task UnPledge()
+        {
+            await Pledge();
+            var Bret = await CRContractStub.getAllCRTs.CallAsync(BobAddress);
+            var Bhashcode = Bret.CRTSet.First();
+            var test = await AliceCRContractStub.CR_UnPledge.SendAsync(Bhashcode);
+            test.Output.ShouldBe(new SInt64Value
+            {
+                Value = 0
+            });
+
+            Bret = await CRContractStub.getAllCRTs.CallAsync(BobAddress);
+            Bret.CRTSet.Count.ShouldBe(0);
+            
+            var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            var Ahashcode = Aret.CRTSet.First();
+            var result = await CRContractStub.getPledgeInfo.CallAsync(Ahashcode);
+            result.ShouldBe(null);
+            var r = await CRContractStub.getAllInfo.CallAsync(Ahashcode);
+            r.CRTStatus.ShouldBe(0);
+        }
+        [Fact]
+        public async Task Approve()
+        {
+            await UpLoad();
+            var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            var Ahashcode = Aret.CRTSet.First();
+            var test = await AliceCRContractStub.CR_Approve.SendAsync(new ApproveReqInput
+            {
+                Addr = BobAddress,
+                CRTID = Ahashcode
+            });
+            test.Output.ShouldBe(new SInt64Value
+            {
+                Value = 0
+            });
+            
+            
+            Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            Ahashcode = Aret.CRTSet.First();
+            var result = await CRContractStub.isApproved.CallAsync(new ApproveReqInput
+            {
+                Addr = BobAddress,
+                CRTID = Ahashcode
+            });
+            result.ShouldBe(new BoolValue{Value = true});
+            
+        }
+        
+        [Fact]
+        public async Task UnApprove()
+        {
+            await UpLoad();
+            var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            var Ahashcode = Aret.CRTSet.First();
+            var test = await AliceCRContractStub.CR_UnApprove.SendAsync(new ApproveReqInput
+            {
+                Addr = BobAddress,
+                CRTID = Ahashcode
+            });
+            test.Output.ShouldBe(new SInt64Value
+            {
+                Value = 0
+            });
+            
+            
+            Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            Ahashcode = Aret.CRTSet.First();
+            var result = await CRContractStub.isApproved.CallAsync(new ApproveReqInput
+            {
+                Addr = BobAddress,
+                CRTID = Ahashcode
+            });
+            result.ShouldBe(new BoolValue{Value = false});
+            
+        }
     }
 }

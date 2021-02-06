@@ -23,6 +23,10 @@ service CRContract {
 
     rpc CR_UnPledge ( aelf.Hash ) returns (aelf.SInt64Value) {} //版权赎回
 
+    rpc CR_Approve ( ApproveReqInput ) returns (aelf.SInt64Value) {}//版权质押
+
+    rpc CR_UnApprove ( ApproveReqInput ) returns (aelf.SInt64Value) {} //版权赎回
+
     rpc CR_Logout(aelf.Address) returns (aelf.SInt64Value){ }//用户登出
 
     rpc CR_Delete(aelf.Address) returns (aelf.SInt64Value){ }//用户注销
@@ -39,6 +43,10 @@ service CRContract {
         option (aelf.is_view) = true;
     }
 
+    rpc getPledgeInfo (aelf.Hash) returns (CRT_Pledge_Info) {//查看存储信息
+        option (aelf.is_view) = true;
+    }
+    
     rpc getAllCRTs (aelf.Address) returns (CRT_List) {//查看存储信息
         option (aelf.is_view) = true;
     }
@@ -70,7 +78,7 @@ message TransferData{
 
 message CRT_Pledge_Info{
     aelf.Address pledgee = 1; //质权人
-    aelf.Address Pledger = 2; //出质人
+    aelf.Address pledger = 2; //出质人
     sint64 price = 3;//质押价格
     aelf.Hash txID = 4; //质押交易ID
     string notice = 5;//备注

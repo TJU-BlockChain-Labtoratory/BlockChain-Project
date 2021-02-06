@@ -92,9 +92,15 @@ namespace AElf.Contracts.CRContract
             Assert(info != null,"CRT_ID not exist");
             Assert(input.Price > 0 , "invalid price");
 
-            //验证额外信息（状态正常、用户是发起者、Approve和Authorized为空(尚未实现)）
+            //验证操作权限（发起者是否为Owner或者位于Approve里，同时区块链也在操作权限中)
+            Assert(State.CRT_Base[input.CRTID].CRTApproved.Contains(Context.Sender) 
+                || Context.Sender == info.CRTOwner, "invalid sender");
+            
+            //验证额外信息（状态正常、用户是发起者、Authorized为空）
             Assert(info.CRTStatus == 0 , "invalid status");
-            Assert(Context.Sender == info.CRTOwner , "invalid sender");
+            Assert(State.CRT_Base[input.CRTID].CRTAuthorized.Count == 0 ,"CRT is Authorized to other users." );
+            
+            
             //转移手续费
             State.TokenContract.TransferFrom.Send(new TransferFromInput{
                 From = input.Addr,
@@ -123,19 +129,17 @@ namespace AElf.Contracts.CRContract
             Assert(info != null,"CRT_ID not exist");//验证CRT_ID是否存在且处于可以被质押的状态
             Assert(info.CRTStatus == 0, "CRT_ID status error"); //如何返回错误码3
             Assert(input.PledgeInfo.Price > 0 , "invalid price");
+            
             //判断Pledgee和Pledger用户存在（如果不存在，则输出输入信息错误码4）
             Assert(State.UserInfo[input.PledgeInfo.Pledgee] != null,"invalid Pledgee");
             Assert(State.UserInfo[input.PledgeInfo.Pledger] != null,"invalid Pledger");
             //Time_limit是否正常
             
 
-            //验证额外信息（状态正常、用户是发起者、Approve和Authorized为空(尚未实现)）//Approve不用为空吧，只需要Authorized为空就行
-            Assert(info.CRTStatus == 2 , "invalid status");
+            //验证额外信息（状态正常、用户是发起者、Authorized为空）
+            Assert(info.CRTStatus != 2 , "invalid status");
             Assert(Context.Sender == info.CRTOwner , "invalid sender");
             Assert(CRT.CRTAuthorized.Count == 0 ,"CRT is Authorized to other users." );
-            
-            //为合约本身授权（以下直到UnApprove，都是原子操作）
-            CRT_Approve( input.CRTID, Context.Self );
             
             //合约需要调用PledgeInfo.Pledgee的代币发起交易，需要PledgeInfo.Pledgee提前为合约授权
             State.TokenContract.TransferFrom.Send(new TransferFromInput{
@@ -146,15 +150,13 @@ namespace AElf.Contracts.CRContract
                 Memo = "Pledged"
             });
             
-            //检查输入上面交易是否完成（未完成）
-            //如果完成获取交易ID（未完成）
+            //修改CRT的pledgeInfo，并将CRT纳入到质权人的账户中
             var txID = Context.TransactionId;//本语句待定是否正确
             var newPledgeInfo = input.PledgeInfo;
             newPledgeInfo.TxID = txID;
             
-            var ret = CRT_Pledge( input.CRTID, newPledgeInfo);
-            CRT_UnApprove(input.CRTID, Context.Self);
-            
+            var ret = CRT_Pledge(input);
+
             return new SInt64Value{Value = ret};
         }
 
@@ -174,8 +176,6 @@ namespace AElf.Contracts.CRContract
             //验证额外信息（用户是发起者）
             Assert(Context.Sender == info.CRTOwner , "invalid sender");
             
-            CRT_Approve( CRT_ID, Context.Self );
-            
             State.TokenContract.Approve.Send( new ApproveInput{
                 Amount = CRT.PledgeInfo.Price,
                 Symbol = "ELF",
@@ -184,16 +184,31 @@ namespace AElf.Contracts.CRContract
 
             //检查输入上面交易是否完成（未完成）
             //如果完成获取交易ID（未完成）
-            var txID = Context.TransactionId;//本语句待定是否正确
 
-            var ret = CRT_UnPledge( CRT_ID );
-
-            CRT_UnApprove( CRT_ID, Context.Self);
+            var ret = CRT_UnPledge(CRT_ID);
             
             return new SInt64Value{Value = ret};
         }
 
+        public override SInt64Value CR_Approve(ApproveReqInput input)
+        {
+            var CRTfetch = State.CRT_Base[input.CRTID];
+            Assert(CRTfetch != null , "not exist!");
+            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            CRTfetch.CRTApproved.Add(input.Addr);
+            State.CRT_Base[input.CRTID] = CRTfetch;
+            return new SInt64Value{Value = 0};
+        }
 
+        public override SInt64Value CR_UnApprove(ApproveReqInput input)
+        {
+            var CRTfetch = State.CRT_Base[input.CRTID];
+            Assert(CRTfetch != null , "not exist!");
+            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            CRTfetch.CRTApproved.Remove(input.Addr);
+            State.CRT_Base[input.CRTID] = CRTfetch;
+            return new SInt64Value{Value = 0};
+        }
         
         
     }
