@@ -210,6 +210,52 @@ namespace AElf.Contracts.CRContract
             return new SInt64Value{Value = 0};
         }
         
+
+        public override SInt64Value CR_Authorize( AuthorizeData input )
+        {
+            //验证发起者账户是否存在且已登陆
+            Assert(State.UserInfo[Context.Sender] != null,"invalid user");
+            var user = State.UserInfo[Context.Sender];
+            Assert(user.Online == true, "not login");
+            var CRT = State.CRT_Base[input.CRTID];
+            var info = CRT.Info;
+
+            //验证输入数据（包括CRT_Pledge_Info.pledgee和CRT_Pledge_Info.Pledger是否存在（尚未实现），CRT_ID是否存在，price是否合法）
+            Assert(info != null,"CRT_ID not exist");//验证CRT_ID是否存在且处于可以被质押的状态
+            Assert(info.CRTStatus == 0, "CRT_ID status error"); //如何返回错误码3
+            Assert(input.AuthorizeInfo.Price > 0 , "invalid price");
+            //判断Pledgee和Pledger用户存在（如果不存在，则输出输入信息错误码4）
+            Assert(State.UserInfo[input.AuthorizeInfo.Authorized] != null,"invalid authorized person");
+            //Time_limit是否正常
+
+            //验证额外信息（状态正常、用户是发起者、Approve和Authorized为空(尚未实现)）//Approve不用为空吧，只需要Authorized为空就行
+            Assert(info.CRTStatus == 2 , "invalid status");
+            Assert(Context.Sender == info.CRTOwner , "invalid sender");
+            
+            //为合约本身授权（以下直到UnApprove，都是原子操作）
+            CRT_Approve( input.CRTID, Context.Self );
+
+            //合约需要调用PledgeInfo.Pledgee的代币发起交易，需要PledgeInfo.Pledgee提前为合约授权
+            State.TokenContract.TransferFrom.Send(new TransferFromInput{
+                From = input.AuthorizeInfo.Authorized,
+                To = info.CRTOwner,
+                Amount = input.AuthorizeInfo.Price,
+                Symbol = "ELF",
+                Memo = "Authorize"
+            });
+
+            //如果完成获取交易ID（未完成）
+            var txID = Context.TransactionId;//本语句待定是否正确
+            var newAuthorizeInfo = input.AuthorizeInfo;
+            newAuthorizeInfo.TxID = txID;
+            var updateAuthorizeInfo = CRT.CRTAuthorized;
+            //to do
+
+
+            var ret = 0;
+            return new SInt64Value{Value = ret};
+        }
+
         
     }
 }

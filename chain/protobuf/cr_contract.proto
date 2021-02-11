@@ -22,6 +22,8 @@ service CRContract {
     rpc CR_Pledge ( PledgeData ) returns (aelf.SInt64Value) {}//版权质押
 
     rpc CR_UnPledge ( aelf.Hash ) returns (aelf.SInt64Value) {} //版权赎回
+    
+    rpc CR_Authorize ( AuthorizeData ) returns (aelf.SInt64Value) {} //版权授权
 
     rpc CR_Approve ( ApproveReqInput ) returns (aelf.SInt64Value) {}//版权质押
 
@@ -90,6 +92,19 @@ message PledgeData{
     CRT_Pledge_Info Pledge_Info = 2;
 }
 
+message CRT_Authorize_Info{
+    aelf.Address authorized = 1;
+    sint64 price = 2;
+    aelf.Hash txID = 3;
+    string notice = 4;
+    //时间数据类型 time_Limit = 5;
+}
+
+message AuthorizeData{
+    aelf.Hash CRT_ID = 1;
+    CRT_Authorize_Info Authorize_Info= 2;
+}
+
 message CRT_Info {//版权资产证明
     aelf.Hash CRT_ID = 1;//只读，唯一标识，被用于标识对应版权。
     aelf.Address CRT_Creator = 2;//只读，地址，标识此Token所对应作品的创造者。
@@ -103,6 +118,7 @@ message CRT {//版权资产证明
     repeated aelf.Address CRT_Authorized = 2;//地址数组，标识被授权使用该Token的全部用户（被许可人）。
     repeated aelf.Address CRT_Approved = 3;//地址数组，记录所有有权修改该CRT属性（除去只读属性）的用户（合约本身也需要Approve后才能操作属性）
     CRT_Pledge_Info Pledge_Info = 4;//地址，仅在CR_Status为被质押时有效。存储版权被质押信息的交易ID。
+    repeated CRT_Authorize_Info Authorize_Info = 5;
 }
 
 message CRT_List{

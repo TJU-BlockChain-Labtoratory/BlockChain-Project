@@ -94,6 +94,14 @@ namespace AElf.Contracts.CRContract
             return 0;
         }
 
+        public int CRT_Authorize( Hash CRT_ID, CRT_Authorize_Info info )
+        {
+            //验证信息
+            //将新授权用户加入authorize数组
+            //将新授权信息加入Authorize_Info数组
+            return 0;
+        }
+
         public int CRT_ChangeOwner(Hash CRT_ID,Address newOwner)
         {
             var CRTfetch = State.CRT_Base[CRT_ID];
