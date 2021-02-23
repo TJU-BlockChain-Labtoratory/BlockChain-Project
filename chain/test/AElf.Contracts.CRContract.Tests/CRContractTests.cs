@@ -127,18 +127,14 @@ namespace AElf.Contracts.CRContract
             });
             var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
             var Ahashcode = Aret.CRTSet.First();
-            var pledge = new CRT_Pledge_Info
+            var test = await AliceCRContractStub.CR_Pledge.SendAsync(new PledgeData
             {
-                Notice = "10 days",
                 Pledgee = BobAddress,
                 Pledger = AliceAddress,
                 Price = 2000,
-                TxID = new Hash()
-            };
-            var test = await AliceCRContractStub.CR_Pledge.SendAsync(new PledgeData
-            {
-               PledgeInfo = pledge,
-               CRTID = Ahashcode
+                CRTID = Ahashcode,
+                TimeLimit = new Timestamp(),
+                Notice = "hello"
             });
             test.Output.ShouldBe(new SInt64Value
             {

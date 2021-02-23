@@ -47,11 +47,11 @@ namespace AElf.Contracts.CRContract
         
         
 
-        public int CRT_Pledge(PledgeData input)
+        public int CRT_Pledge(CRT_Pledge_Info input)
         {
             var CRTfetch = State.CRT_Base[input.CRTID];
             Assert(CRTfetch != null , "CRT not exist!");
-            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            Assert(CRTfetch.Info.CRTStatus == 0 , "has been destoried or pledged");
             //发起者是CRT拥有者或者Approved者
             if ( !(CRTfetch.Info.CRTOwner == Context.Sender || CRTfetch.CRTApproved.Contains(Context.Sender)) )
             {
@@ -59,16 +59,11 @@ namespace AElf.Contracts.CRContract
             }
             
             //修改pledgeInfo
-            var PledgeInfo = input.PledgeInfo;
-            PledgeInfo.TxID = Context.TransactionId;
-            
-            //修改CRT
-            CRTfetch.Info.CRTStatus = 1;
-            CRTfetch.PledgeInfo = PledgeInfo;
+            CRTfetch.Info.CRTStatus = 1;//一旦出质人检查版权时，会由于status == 1而失败
+            CRTfetch.PledgeInfo = input;
             
             State.CRT_Base[input.CRTID] = CRTfetch; //更新CRT的信息
-            State.CRT_Account[PledgeInfo.Pledgee].CRTSet.Add(input.CRTID);//将token添加至质权人账户中，不从出质人手中移除。
-            //一旦出质人检查版权时，会由于pledge数组不为空导致操作失败
+            State.CRT_Account[input.Pledgee].CRTSet.Add(input.CRTID);//将token添加至质权人账户中，不从出质人手中移除。
             
             return 0;
         }
@@ -77,7 +72,7 @@ namespace AElf.Contracts.CRContract
         {
             var CRTfetch = State.CRT_Base[CRT_ID];
             Assert(CRTfetch != null , "CRT not exist!");
-            Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            Assert(CRTfetch.Info.CRTStatus == 1 , "not pledged or has been destoried");
             //发起者是CRT拥有者或者Approved者
             if ( !(CRTfetch.Info.CRTOwner == Context.Sender || CRTfetch.CRTApproved.Contains(Context.Sender)) )
             {
@@ -85,8 +80,6 @@ namespace AElf.Contracts.CRContract
             }
             
             CRTfetch.Info.CRTStatus = 0;
-            
-            
             State.CRT_Account[CRTfetch.PledgeInfo.Pledgee].CRTSet.Remove(CRT_ID);//将token从质权人账户中移除。
             CRTfetch.PledgeInfo = null; //清除掉质押信息
             State.CRT_Base[CRT_ID] = CRTfetch; //更新CRT的信息

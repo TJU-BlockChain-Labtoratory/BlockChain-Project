@@ -67,12 +67,17 @@ namespace AElf.Contracts.CRContract
         public override SInt64Value CR_Upload(UploadData input)
         {
             //验证发起者账户是否存在且已登陆
-            Assert(State.UserInfo[input.CRTOwner] != null,"invalid user");
+            Assert(State.UserInfo[input.CRTOwner] != null,"not registered");
             var user = State.UserInfo[input.CRTOwner];
             Assert(user.Online == true, "not login");
+            
+            //验证Creator是否均已注册（Owner无需验证，因为Owner必须为Sender，否则会报错）
+            Assert(State.UserInfo[input.CRTCreator] != null,"invalid creator");
+            
             //验证输入数据（包括Owner是否就是sender，Creator是否存在，Context是否合法（尚未实现），status是否合法）
             Assert(input.CRTStatus >= 0 && input.CRTStatus <= 2 , "invalid status");
-            Assert(Context.Sender == input.CRTOwner , "invalid sender");
+            Assert(Context.Sender == input.CRTOwner , "invalid owner");
+            
             //转移手续费与生成CRT
             var ret = CRT_Create(input.CRTCreator, input.CRTOwner, input.CRTContent, input.CRTStatus);
 
@@ -86,20 +91,23 @@ namespace AElf.Contracts.CRContract
             Assert(State.UserInfo[Context.Sender] != null,"invalid user");
             var user = State.UserInfo[Context.Sender];
             Assert(user.Online == true, "not login");
+            
             var info = State.CRT_Base[input.CRTID].Info;
-
-            //验证输入数据（包括addr是否存在（尚未实现），CRT_ID是否存在，price是否合法）
+            
+            //验证输入数据（包括addr是否存在，CRT_ID是否存在，price是否合法）
+            Assert(State.UserInfo[input.Addr] != null, "invalid buyer");
             Assert(info != null,"CRT_ID not exist");
             Assert(input.Price > 0 , "invalid price");
 
             //验证操作权限（发起者是否为Owner或者位于Approve里，同时区块链也在操作权限中)
             Assert(State.CRT_Base[input.CRTID].CRTApproved.Contains(Context.Sender) 
-                || Context.Sender == info.CRTOwner, "invalid sender");
+                || Context.Sender == info.CRTOwner, "invalid sender");//质权人不可转让版权，只能等到成为拥有者才行
+            Assert(State.CRT_Base[input.CRTID].CRTApproved.Contains(Context.Self)
+                    ,"the blockchain is not approved");
             
             //验证额外信息（状态正常、用户是发起者、Authorized为空）
             Assert(info.CRTStatus == 0 , "invalid status");
             Assert(State.CRT_Base[input.CRTID].CRTAuthorized.Count == 0 ,"CRT is Authorized to other users." );
-            
             
             //转移手续费
             State.TokenContract.TransferFrom.Send(new TransferFromInput{
@@ -113,6 +121,7 @@ namespace AElf.Contracts.CRContract
             //改变CRT所有者
             var ret = CRT_ChangeOwner(input.CRTID, input.Addr);
             
+            State.CRT_Base[input.CRTID].CRTApproved.Remove(Context.Self);//自动取消对区块链的approve，防止越权
             return new SInt64Value{Value = ret};
         }
         
@@ -128,35 +137,47 @@ namespace AElf.Contracts.CRContract
             //验证输入数据（包括CRT_Pledge_Info.pledgee和CRT_Pledge_Info.Pledger是否存在（尚未实现），CRT_ID是否存在，price是否合法）
             Assert(info != null,"CRT_ID not exist");//验证CRT_ID是否存在且处于可以被质押的状态
             Assert(info.CRTStatus == 0, "CRT_ID status error"); //如何返回错误码3
-            Assert(input.PledgeInfo.Price > 0 , "invalid price");
+            Assert(input.Price > 0 , "invalid price");
             
             //判断Pledgee和Pledger用户存在（如果不存在，则输出输入信息错误码4）
-            Assert(State.UserInfo[input.PledgeInfo.Pledgee] != null,"invalid Pledgee");
-            Assert(State.UserInfo[input.PledgeInfo.Pledger] != null,"invalid Pledger");
-            //Time_limit是否正常
+            Assert(State.UserInfo[input.Pledgee] != null,"invalid Pledgee");
+            Assert(State.UserInfo[input.Pledger] != null,"invalid Pledger");
             
+            //Time_limit是否正常（大于1天）
+            var d = input.TimeLimit - Context.CurrentBlockTime;
+            Assert(d.Seconds > 86400, "duration too short");
 
             //验证额外信息（状态正常、用户是发起者、Authorized为空）
             Assert(info.CRTStatus != 2 , "invalid status");
             Assert(Context.Sender == info.CRTOwner , "invalid sender");
             Assert(CRT.CRTAuthorized.Count == 0 ,"CRT is Authorized to other users." );
+            Assert(State.CRT_Base[input.CRTID].CRTApproved.Contains(Context.Self)
+                ,"the blockchain is not approved");
             
             //合约需要调用PledgeInfo.Pledgee的代币发起交易，需要PledgeInfo.Pledgee提前为合约授权
             State.TokenContract.TransferFrom.Send(new TransferFromInput{
-                From = input.PledgeInfo.Pledgee,
-                To = input.PledgeInfo.Pledger,
-                Amount = input.PledgeInfo.Price,
+                From = input.Pledgee,
+                To = input.Pledger,
+                Amount = input.Price,
                 Symbol = "ELF",
                 Memo = "Pledged"
             });
             
             //修改CRT的pledgeInfo，并将CRT纳入到质权人的账户中
             var txID = Context.TransactionId;//本语句待定是否正确
-            var newPledgeInfo = input.PledgeInfo;
-            newPledgeInfo.TxID = txID;
-            
-            var ret = CRT_Pledge(input);
+            var newPledgeInfo = new CRT_Pledge_Info
+            {
+                CRTID = input.CRTID,
+                Pledgee = input.Pledgee, //质权人
+                Pledger = input.Pledger, //出质人
+                Price = input.Price,//质押价格
+                TxID = txID, //质押交易ID
+                Notice = "Pledged",//备注
+                TimeLimit = input.TimeLimit//质押持续时间，质押结束时间到，如果还没有赎回，则将版权的拥有权从出质人转变为质权人
+            };
 
+            var ret = CRT_Pledge(newPledgeInfo);
+            State.CRT_Base[input.CRTID].CRTApproved.Remove(Context.Self);//自动取消对区块链的approve，防止越权
             return new SInt64Value{Value = ret};
         }
 
@@ -173,20 +194,14 @@ namespace AElf.Contracts.CRContract
             Assert(info != null,"CRT_ID not exist");//验证CRT_ID是否存在且处于可以被质押的状态
             Assert(info.CRTStatus == 1, "CRT_ID is not Pledged"); //如何返回错误码3
             
-            //验证额外信息（用户是发起者）
-            Assert(Context.Sender == info.CRTOwner , "invalid sender");
-            
-            State.TokenContract.Approve.Send( new ApproveInput{
-                Amount = CRT.PledgeInfo.Price,
-                Symbol = "ELF",
-                Spender = Context.Self
-            } );
-
-            //检查输入上面交易是否完成（未完成）
-            //如果完成获取交易ID（未完成）
+            //验证额外信息（用户是质权人）
+            Assert(Context.Sender == CRT.PledgeInfo.Pledgee , "invalid sender");//只有质权人可以主动取消质权
+            Assert(State.CRT_Base[CRT_ID].CRTApproved.Contains(Context.Self)
+                ,"the blockchain is not approved");
 
             var ret = CRT_UnPledge(CRT_ID);
             
+            State.CRT_Base[CRT_ID].CRTApproved.Remove(Context.Self);//自动取消对区块链的approve，防止越权
             return new SInt64Value{Value = ret};
         }
 
@@ -195,6 +210,12 @@ namespace AElf.Contracts.CRContract
             var CRTfetch = State.CRT_Base[input.CRTID];
             Assert(CRTfetch != null , "not exist!");
             Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            
+            //获取实际拥有者：owner（未质押）或者pledgee（已质押）
+            var owner = CRTfetch.Info.CRTStatus == 1 ? CRTfetch.PledgeInfo.Pledgee : CRTfetch.Info.CRTOwner;
+            
+            Assert(Context.Sender == owner, "You have no right to approve");
+            
             CRTfetch.CRTApproved.Add(input.Addr);
             State.CRT_Base[input.CRTID] = CRTfetch;
             return new SInt64Value{Value = 0};
@@ -205,6 +226,12 @@ namespace AElf.Contracts.CRContract
             var CRTfetch = State.CRT_Base[input.CRTID];
             Assert(CRTfetch != null , "not exist!");
             Assert(CRTfetch.Info.CRTStatus != 2 , "has been destoried");
+            
+            //获取实际拥有者：owner（未质押）或者pledgee（已质押）
+            var owner = CRTfetch.Info.CRTStatus == 1 ? CRTfetch.PledgeInfo.Pledgee : CRTfetch.Info.CRTOwner;
+            
+            Assert(Context.Sender == owner, "You have no right to approve");
+            
             CRTfetch.CRTApproved.Remove(input.Addr);
             State.CRT_Base[input.CRTID] = CRTfetch;
             return new SInt64Value{Value = 0};
@@ -230,10 +257,10 @@ namespace AElf.Contracts.CRContract
 
             //验证额外信息（状态正常、用户是发起者、Approve和Authorized为空(尚未实现)）//Approve不用为空吧，只需要Authorized为空就行
             Assert(info.CRTStatus == 2 , "invalid status");
-            Assert(Context.Sender == info.CRTOwner , "invalid sender");
             
-            //为合约本身授权（以下直到UnApprove，都是原子操作）
-            CRT_Approve( input.CRTID, Context.Self );
+            //获取实际拥有者：owner（未质押）或者pledgee（已质押）
+            var owner = info.CRTStatus == 1 ? CRT.PledgeInfo.Pledgee : info.CRTOwner;
+            Assert(Context.Sender == owner, "You have no right to approve");
 
             //合约需要调用PledgeInfo.Pledgee的代币发起交易，需要PledgeInfo.Pledgee提前为合约授权
             State.TokenContract.TransferFrom.Send(new TransferFromInput{
