@@ -90,8 +90,23 @@ namespace AElf.Contracts.CRContract
         public int CRT_Authorize( Hash CRT_ID, CRT_Authorize_Info info )
         {
             //验证信息
+            var CRTfetch = State.CRT_Base[CRT_ID];
+            Assert(CRTfetch != null , "CRT not exist!");
+            //发起者是CRT拥有者或者Approved者
+            if ( !(CRTfetch.Info.CRTOwner == Context.Sender || CRTfetch.CRTApproved.Contains(Context.Sender)) )
+            {
+                return 2;//身份错误码2
+            }
+
             //将新授权用户加入authorize数组
+            CRTfetch.CRTAuthorized.Add( info.Authorized );
             //将新授权信息加入Authorize_Info数组
+            CRTfetch.AuthorizeInfo.Add( info );
+            
+            //to do:对账户添加CRT的信息
+
+            State.CRT_Base[CRT_ID] = CRTfetch;//更新CRT
+
             return 0;
         }
 

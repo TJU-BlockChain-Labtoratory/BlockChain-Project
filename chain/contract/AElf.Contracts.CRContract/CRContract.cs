@@ -277,9 +277,8 @@ namespace AElf.Contracts.CRContract
             newAuthorizeInfo.TxID = txID;
             var updateAuthorizeInfo = CRT.CRTAuthorized;
             //to do
+            var ret = CRT_Authorize( input.CRTID, input.AuthorizeInfo );
 
-
-            var ret = 0;
             return new SInt64Value{Value = ret};
         }
 
