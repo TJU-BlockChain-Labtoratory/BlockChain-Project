@@ -2,6 +2,7 @@ using Google.Protobuf.WellKnownTypes;
 using AElf.CSharp.Core;
 using AElf.CSharp.Core.Extension;
 using AElf.Sdk.CSharp;
+using System;
 using AElf.Contracts.MultiToken;
 using AElf.Types;
 
@@ -282,6 +283,24 @@ namespace AElf.Contracts.CRContract
             return new SInt64Value{Value = ret};
         }
 
+        public override SInt64Value Timecheck(Empty input)
+        {
+            //需要检查时限需要确认身份吗？
+            //string s = State.CRT_Base.ToString;
+            foreach ( Hash onehash in State.Pledge_CRTID_List )
+            {
+                var fetchCRT = State.CRT_Base[onehash];
+                if( fetchCRT.Info.CRTStatus == 1 ){
+                    //获取当前时间
+                    //当前时间与 fetchCRT.PledgeInfo.TimeLimit  时间进行对比
+                    //如果小于等于，则无需更改
+                    //如果大于，则发出取消质押的交易
+                }
+                    
+            }
+            
+            return new SInt64Value{ Value=0};
+        }
         
     }
 }

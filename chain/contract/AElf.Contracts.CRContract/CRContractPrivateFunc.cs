@@ -63,6 +63,7 @@ namespace AElf.Contracts.CRContract
             CRTfetch.PledgeInfo = input;
             
             State.CRT_Base[input.CRTID] = CRTfetch; //更新CRT的信息
+            State.Pledge_CRTID_List.Add(input.CRTID); //将CRTID添加到被质押CRT集合的数组中
             State.CRT_Account[input.Pledgee].CRTSet.Add(input.CRTID);//将token添加至质权人账户中，不从出质人手中移除。
             
             return 0;
@@ -83,6 +84,7 @@ namespace AElf.Contracts.CRContract
             State.CRT_Account[CRTfetch.PledgeInfo.Pledgee].CRTSet.Remove(CRT_ID);//将token从质权人账户中移除。
             CRTfetch.PledgeInfo = null; //清除掉质押信息
             State.CRT_Base[CRT_ID] = CRTfetch; //更新CRT的信息
+            State.Pledge_CRTID_List.Remove(CRT_ID);//将CRTID从到被质押CRT集合的数组中删除
 
             return 0;
         }

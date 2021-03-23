@@ -34,6 +34,8 @@ service CRContract {
 
     rpc CR_Delete(aelf.Address) returns (aelf.SInt64Value){ }//用户注销
 
+    rpc Timecheck ( google.protobuf.Empty ) returns (aelf.SInt64Value) {}//检查被质押CRT的时限
+
     rpc isApproved (ApproveReqInput) returns (google.protobuf.BoolValue) {//查看是否被授予操作权限
         option (aelf.is_view) = true;
     }
