@@ -31,8 +31,8 @@ module.exports = {
     devServer: {
         disableHostCheck: true,
         contentBase: path.resolve(__dirname),
-        // host: '0.0.0.0',
-        host: '127.0.0.1',
+        host: '0.0.0.0',
+        //host: '127.0.0.1',
         port: 9527,
         compress: true,
         hot: true,

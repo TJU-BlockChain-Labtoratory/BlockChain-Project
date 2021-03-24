@@ -15,7 +15,7 @@ const wallet = AElf.wallet.getWalletByPrivateKey(defaultPrivateKey);
 console.log("wallet.address: " + wallet.address);
 // link to local Blockchain, you can learn how to run a local node in https://docs.aelf.io/main/main/setup
 // const aelf = new AElf(new AElf.providers.HttpProvider('http://127.0.0.1:1235'));
-const aelf = new AElf(new AElf.providers.HttpProvider('http://127.0.0.1:1235'));
+const aelf = new AElf(new AElf.providers.HttpProvider('http://172.24.74.162:1235'));
 
 if (!aelf.isConnected()) {
   alert('Blockchain Node is not running.');
