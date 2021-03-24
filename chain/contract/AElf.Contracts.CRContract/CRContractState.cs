@@ -2,6 +2,7 @@ using AElf;
 using AElf.Types;
 using AElf.Sdk.CSharp.State;
 using System.Collections.Generic;
+using Google.Protobuf.Collections;
 
 namespace AElf.Contracts.CRContract
 {
@@ -13,7 +14,7 @@ namespace AElf.Contracts.CRContract
         // state definitions go here.
         public SingletonState<bool> Initialized { get; set; }
 
-        public List<Hash> Pledge_CRTID_List = new List<Hash>();
+        public RepeatedField<Hash> Pledge_CRTID_List { get; set; }
 
         public MappedState<Address, Identity> UserInfo { get; set; }
         

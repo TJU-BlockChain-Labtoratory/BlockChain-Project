@@ -286,17 +286,32 @@ namespace AElf.Contracts.CRContract
         public override SInt64Value Timecheck(Empty input)
         {
             //需要检查时限需要确认身份吗？
+            //需要，因为他是公有函数，但具体权限尚在定制
+            
             //string s = State.CRT_Base.ToString;
             foreach ( Hash onehash in State.Pledge_CRTID_List )
             {
                 var fetchCRT = State.CRT_Base[onehash];
-                if( fetchCRT.Info.CRTStatus == 1 ){
-                    //获取当前时间
-                    //当前时间与 fetchCRT.PledgeInfo.TimeLimit  时间进行对比
-                    //如果小于等于，则无需更改
-                    //如果大于，则发出取消质押的交易
+                if (fetchCRT.Info.CRTStatus != 1)//并非质押状态，剔除列表
+                {
+                    State.Pledge_CRTID_List.Remove(onehash);
+                    continue;
                 }
-                    
+                
+                //获取当前时间与期限
+                var currTime = Context.CurrentBlockTime;
+                var limit = fetchCRT.PledgeInfo.TimeLimit;
+                
+                //当前时间与 fetchCRT.PledgeInfo.TimeLimit  时间进行对比
+                var d = limit.Seconds - currTime.Seconds;
+                
+                if (d > 0) continue;//未过期，检查下一个
+                CRT_UnPledge(onehash);
+                State.Pledge_CRTID_List.Remove(onehash);
+                
+                //如果大于，则发出取消质押的交易
+                //无需发起交易，可以内部处理。这个函数本身就将是一笔交易。
+
             }
             
             return new SInt64Value{ Value=0};
