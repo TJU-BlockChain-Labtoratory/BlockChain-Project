@@ -141,3 +141,13 @@ message ApproveReqInput{
     aelf.Hash CRT_ID = 1;
     aelf.Address addr = 2;
 }
+
+message Pledge_CRTID_List{
+    repeated aelf.Hash CRT_ID = 1;
+}
+
+message Pledge_Logging{
+    option (aelf.is_event) = true;
+    google.protobuf.Timestamp currTime = 1;
+    google.protobuf.Timestamp TimeLimit = 2;
+}

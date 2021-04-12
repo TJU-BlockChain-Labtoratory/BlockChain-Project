@@ -14,7 +14,7 @@ namespace AElf.Contracts.CRContract
         // state definitions go here.
         public SingletonState<bool> Initialized { get; set; }
 
-        public RepeatedField<Hash> Pledge_CRTID_List { get; set; }
+        public SingletonState<Pledge_CRTID_List> Pledge_List { get; set; }
 
         public MappedState<Address, Identity> UserInfo { get; set; }
         

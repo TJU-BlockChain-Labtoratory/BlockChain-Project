@@ -1,9 +1,11 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AElf.ContractTestBase.ContractTestKit;
 using AElf.Types;
 using AElf.Kernel.Token;
 using AElf.Contracts.MultiToken;
+using TExtensions = AElf.CSharp.Core.Extension.TimestampExtensions;
 using Google.Protobuf.WellKnownTypes;
 using Shouldly;
 using Xunit;
@@ -127,13 +129,16 @@ namespace AElf.Contracts.CRContract
             });
             var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
             var Ahashcode = Aret.CRTSet.First();
+            var dt = DateTime.Now;
+            var currTime = Timestamp.FromDateTime(dt);
+            var limit =  TExtensions.AddMinutes(currTime , 2);
             var test = await AliceCRContractStub.CR_Pledge.SendAsync(new PledgeData
             {
                 Pledgee = BobAddress,
                 Pledger = AliceAddress,
                 Price = 2000,
                 CRTID = Ahashcode,
-                TimeLimit = new Timestamp(),
+                TimeLimit = limit,
                 Notice = "hello"
             });
             test.Output.ShouldBe(new SInt64Value

@@ -179,6 +179,11 @@ namespace AElf.Contracts.CRContract
 
             var ret = CRT_Pledge(newPledgeInfo);
             State.CRT_Base[input.CRTID].CRTApproved.Remove(Context.Self);//自动取消对区块链的approve，防止越权
+            Context.Fire(new Pledge_Logging
+            {
+                CurrTime = Context.CurrentBlockTime,
+                TimeLimit = input.TimeLimit
+            });
             return new SInt64Value{Value = ret};
         }
 
@@ -219,6 +224,7 @@ namespace AElf.Contracts.CRContract
             
             CRTfetch.CRTApproved.Add(input.Addr);
             State.CRT_Base[input.CRTID] = CRTfetch;
+            
             return new SInt64Value{Value = 0};
         }
 
@@ -289,12 +295,13 @@ namespace AElf.Contracts.CRContract
             //需要，因为他是公有函数，但具体权限尚在定制
             
             //string s = State.CRT_Base.ToString;
-            foreach ( Hash onehash in State.Pledge_CRTID_List )
+            var list = State.Pledge_List.Value;
+            foreach ( Hash onehash in list.CRTID )
             {
                 var fetchCRT = State.CRT_Base[onehash];
                 if (fetchCRT.Info.CRTStatus != 1)//并非质押状态，剔除列表
                 {
-                    State.Pledge_CRTID_List.Remove(onehash);
+                    list.CRTID.Remove(onehash);
                     continue;
                 }
                 
@@ -307,8 +314,8 @@ namespace AElf.Contracts.CRContract
                 
                 if (d > 0) continue;//未过期，检查下一个
                 CRT_UnPledge(onehash);
-                State.Pledge_CRTID_List.Remove(onehash);
-                
+                list.CRTID.Remove(onehash);
+                State.Pledge_List.Value = list;
                 //如果大于，则发出取消质押的交易
                 //无需发起交易，可以内部处理。这个函数本身就将是一笔交易。
 
