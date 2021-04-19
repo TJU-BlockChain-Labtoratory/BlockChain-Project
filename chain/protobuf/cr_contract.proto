@@ -25,6 +25,8 @@ service CRContract {
     rpc CR_UnPledge ( aelf.Hash ) returns (aelf.SInt64Value) {} //版权赎回
     
     rpc CR_Authorize ( AuthorizeData ) returns (aelf.SInt64Value) {} //版权授权
+    
+    rpc CR_UnAuthorize ( UnAuthorizeData ) returns (aelf.SInt64Value){}
 
     rpc CR_Approve ( ApproveReqInput ) returns (aelf.SInt64Value) {}//版权质押
 
@@ -103,13 +105,17 @@ message PledgeData{
 message CRT_Authorize_Info{
     aelf.Address authorized = 1;
     sint64 price = 2;
-    aelf.Hash txID = 3;
-    string notice = 4;
+    string notice = 3;
 }
 
 message AuthorizeData{
     aelf.Hash CRT_ID = 1;
-    CRT_Authorize_Info Authorize_Info= 2;
+    CRT_Authorize_Info Authorize_Info = 2;
+}
+
+message UnAuthorizeData{
+    aelf.Hash CRT_ID = 1;
+    aelf.Address unauthorize = 2;
 }
 
 message CRT_Info {//版权资产证明
