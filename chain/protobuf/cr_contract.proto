@@ -57,6 +57,10 @@ service CRContract {
     rpc getAllCRTs (aelf.Address) returns (CRT_List) {//查看存储信息
         option (aelf.is_view) = true;
     }
+
+    rpc getCRTID ( GetCRTIDInput ) returns ( aelf.Hash ){ //从CRT内容获取CRT的ID
+        option (aelf.is_view) = true;
+    }
     
     rpc Get_User_Info(aelf.Address) returns (Identity){
         option (aelf.is_view) = true;
@@ -68,6 +72,11 @@ message Identity {//身份信息数据结构
     aelf.Address Address = 1;//地址
     bool online = 2;
     //后续继续添加
+}
+
+message GetCRTIDInput{
+    string CRT_Content = 1;
+    aelf.Address Owner = 2;
 }
 
 message UploadData{
