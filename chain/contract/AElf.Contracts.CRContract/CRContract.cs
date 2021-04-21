@@ -301,11 +301,11 @@ namespace AElf.Contracts.CRContract
                 ,"the blockchain is not approved");
             
             //将取消授权用户从authorize数组中删除
-            CRT.CRTAuthorized.Remove( input.unauthorize );
+            CRT.CRTAuthorized.Remove( input.Unauthorize );
             var ret = 0;
             //将授权信息从Authorize_Info数组中删除
             foreach( CRT_Authorize_Info i in CRT.AuthorizeInfo ){
-                if( i.Authorized == input.unauthorize ){
+                if( i.Authorized == input.Unauthorize ){
                     ret = CRT.AuthorizeInfo.Remove(i)==true?0:1;
                 }
             }
