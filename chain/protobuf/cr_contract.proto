@@ -99,7 +99,7 @@ message CRT_Pledge_Info{
     sint64 price = 4;//质押价格
     aelf.Hash txID = 5; //质押交易ID
     string notice = 6;//备注
-    string time_limit = 7;//质押结束时间，质押结束时间到，如果还没有赎回，则将版权的拥有权从出质人转变为质权人
+    google.protobuf.Timestamp time_limit = 7;//质押结束时间，质押结束时间到，如果还没有赎回，则将版权的拥有权从出质人转变为质权人
 }
 
 message PledgeData{
@@ -108,7 +108,7 @@ message PledgeData{
     aelf.Address pledger = 3; //出质人
     sint64 price = 4;//质押价格
     string notice = 5;//备注
-    google.protobuf.Timestamp time_limit = 6;//质押结束时间，质押结束时间到，如果还没有赎回，则将版权的拥有权从出质人转变为质权人
+    string time_limit = 6;//质押结束时间，质押结束时间到，如果还没有赎回，则将版权的拥有权从出质人转变为质权人
 }
 
 message UnAuthorizeData{

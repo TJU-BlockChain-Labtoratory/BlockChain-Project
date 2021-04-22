@@ -8,8 +8,8 @@ namespace AElf.Contracts.CRContract
         private int CRT_Create(Address creator, Address owner , string content , long status)
         {
             //生成CRT_ID
-            var HashOfContent = HashHelper.ComputeFrom(creator);
-            var HashOfCreater = HashHelper.ComputeFrom(owner);
+            var HashOfContent = HashHelper.ComputeFrom(content);
+            var HashOfCreater = HashHelper.ComputeFrom(creator);
             var HashValue = HashHelper.ConcatAndCompute(HashOfContent, HashOfCreater);
             
             State.TokenContract.Approve.Send(new ApproveInput{

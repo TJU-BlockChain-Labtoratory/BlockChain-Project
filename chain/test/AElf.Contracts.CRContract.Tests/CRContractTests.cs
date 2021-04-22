@@ -131,8 +131,7 @@ namespace AElf.Contracts.CRContract
             var Ahashcode = Aret.CRTSet.First();
             var dt = DateTime.UtcNow;
             var currTime = Timestamp.FromDateTime(dt);
-            var limit =  TExtensions.AddMinutes(currTime , 2);
-            Timestamp.FromDateTime(DateTime.Parse(s: "2021-04-22T17:27").ToUniversalTime());
+            var limit =  "2021-04-22T17:27";
             var test = await AliceCRContractStub.CR_Pledge.SendAsync(new PledgeData
             {
                 Pledgee = BobAddress,
