@@ -75,7 +75,7 @@ namespace AElf.Contracts.CRContract
             Assert(CRTfetch != null , "CRT not exist!");
             Assert(CRTfetch.Info.CRTStatus == 1 , "not pledged or has been destoried");
             //发起者是CRT拥有者或者Approved者
-            if ( !(CRTfetch.Info.CRTOwner == Context.Sender || CRTfetch.CRTApproved.Contains(Context.Sender)) )
+            if ( !(CRTfetch.PledgeInfo.Pledgee == Context.Sender || CRTfetch.CRTApproved.Contains(Context.Sender)) )
             {
                 return 2;//身份错误码2
             }
