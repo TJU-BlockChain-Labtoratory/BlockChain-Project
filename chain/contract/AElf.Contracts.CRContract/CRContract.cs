@@ -255,9 +255,8 @@ namespace AElf.Contracts.CRContract
             Assert(State.UserInfo[input.Addr] != null,"invalid authorized person");
             //Time_limit是否正常
 
-            //验证额外信息（状态正常、用户是发起者、Approve和Authorized为空(尚未实现)）//Approve不用为空吧，只需要Authorized为空就行
-            Assert(info.CRTStatus == 2 , "invalid status");
-            
+            //验证额外信息（状态正常、用户是发起者、Approve和Authorized为空(尚未实现)）//Approve不用为空吧，只需要Authorized为空就
+
             //获取实际拥有者：owner（未质押）或者pledgee（已质押）
             var owner = info.CRTStatus == 1 ? CRT.PledgeInfo.Pledgee : info.CRTOwner;
             Assert(Context.Sender == owner, "You have no right to Authorize");
@@ -286,7 +285,7 @@ namespace AElf.Contracts.CRContract
 
             //验证输入数据（CRT_ID是否存在）
             Assert(info != null,"CRT_ID not exist");//验证CRT_ID是否存在且处于可以被质押的状态
-            Assert(info.CRTStatus == 1, "CRT_ID is not Pledged"); //如何返回错误码3
+            Assert(info.CRTStatus == 0, "CRT_ID is not Normal"); //如何返回错误码3
             
             //验证额外信息（用户是质权人)
             Assert(Context.Sender == info.CRTOwner, "invalid sender");

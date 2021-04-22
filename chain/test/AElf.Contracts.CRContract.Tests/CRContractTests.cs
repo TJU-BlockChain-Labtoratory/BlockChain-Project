@@ -154,14 +154,14 @@ namespace AElf.Contracts.CRContract
             var r = await CRContractStub.getAllInfo.CallAsync(Bhashcode);
             r.CRTStatus.ShouldBe(1);
         }
-        
+
         [Fact]
         public async Task UnPledge()
         {
             await Pledge();
             var Bret = await CRContractStub.getAllCRTs.CallAsync(BobAddress);
             var Bhashcode = Bret.CRTSet.First();
-            var test = await AliceCRContractStub.CR_UnPledge.SendAsync(Bhashcode);
+            var test = await BobCRContractStub.CR_UnPledge.SendAsync(Bhashcode);
             test.Output.ShouldBe(new SInt64Value
             {
                 Value = 0
@@ -169,12 +169,13 @@ namespace AElf.Contracts.CRContract
 
             Bret = await CRContractStub.getAllCRTs.CallAsync(BobAddress);
             Bret.CRTSet.Count.ShouldBe(0);
-            
+
             var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
             var Ahashcode = Aret.CRTSet.First();
             var result = await CRContractStub.getPledgeInfo.CallAsync(Ahashcode);
-            result.ShouldBe(null);
-            var r = await CRContractStub.getAllInfo.CallAsync(Ahashcode);
+            result.ShouldBe(new CRT_Pledge_Info());
+
+        var r = await CRContractStub.getAllInfo.CallAsync(Ahashcode);
             r.CRTStatus.ShouldBe(0);
         }
         [Fact]
@@ -232,18 +233,24 @@ namespace AElf.Contracts.CRContract
             result.ShouldBe(new BoolValue{Value = false});
             
         }
-        
+        [Fact]
         public async Task Authorize()
         {
             await UpLoad();
             var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
             var Ahashcode = Aret.CRTSet.First();
+            await BobTokenContractStub.Approve.SendAsync(new ApproveInput
+            {
+                Amount = 1000000,
+                Spender = CRContractAddress,
+                Symbol = "ELF"
+            });
             
-            var test = await AliceCRContractStub.CR_Authorize.SendAsync(new AuthorizeInput(
+            var test = await AliceCRContractStub.CR_Authorize.SendAsync(new AuthorizeInput
             {
                 CRTID = Ahashcode,
-                Addr = BobAddress,
-                Price = 10000,
+                Price = 100000,
+                Addr = BobAddress
             });
             test.Output.ShouldBe(new SInt64Value
             {
@@ -253,13 +260,36 @@ namespace AElf.Contracts.CRContract
             
             Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
             Ahashcode = Aret.CRTSet.First();
-            var result = await CRContractStub.isApproved.CallAsync(new ApproveReqInput
+            var result = await CRContractStub.isAuthorized.CallAsync(new AuthorizeInput()
             {
                 Addr = BobAddress,
                 CRTID = Ahashcode
             });
             result.ShouldBe(new BoolValue{Value = true});
             
+        }
+        [Fact]
+        public async Task UnAuthorize()
+        {
+            await Authorize();
+            var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            var Ahashcode = Aret.CRTSet.First();
+            
+
+            var test = await AliceCRContractStub.CR_UnAuthorize.SendAsync(new UnAuthorizeData()
+            {
+                CRTID = Ahashcode,
+                Unauthorize = BobAddress
+            });
+            test.Output.ShouldBe(new SInt64Value{Value = 0} );
+
+            var result = await AliceCRContractStub.isAuthorized.SendAsync(new AuthorizeInput
+            {
+                Addr = BobAddress,
+                CRTID = Ahashcode,
+                Price = 0
+            });
+            result.Output.ShouldBe(new BoolValue {Value = false});
         }
     }
 }
