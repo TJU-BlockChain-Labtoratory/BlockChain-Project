@@ -143,8 +143,8 @@ namespace AElf.Contracts.CRContract
             Assert(State.UserInfo[input.Pledger] != null,"invalid Pledger");
             
             //Time_limit是否正常（大于1天）
-
-            var d = input.TimeLimit - Context.CurrentBlockTime;
+            var time = Timestamp.FromDateTime(DateTime.Parse(input.TimeLimit).ToUniversalTime());
+            var d = time - Context.CurrentBlockTime;
             //Assert(d.Seconds > 86400, "duration too short");
 
             //验证额外信息（状态正常、用户是发起者、Authorized为空）
@@ -171,14 +171,14 @@ namespace AElf.Contracts.CRContract
                 Price = input.Price,//质押价格
                 TxID = txID, //质押交易ID
                 Notice = "Pledged",//备注
-                TimeLimit = input.TimeLimit//质押持续时间，质押结束时间到，如果还没有赎回，则将版权的拥有权从出质人转变为质权人
+                TimeLimit = time//质押持续时间，质押结束时间到，如果还没有赎回，则将版权的拥有权从出质人转变为质权人
             };
 
             var ret = CRT_Pledge(newPledgeInfo);
             Context.Fire(new Pledge_Logging
             {
                 CurrTime = Context.CurrentBlockTime,
-                TimeLimit = input.TimeLimit
+                TimeLimit = time
             });
             return new SInt64Value{Value = ret};
         }
