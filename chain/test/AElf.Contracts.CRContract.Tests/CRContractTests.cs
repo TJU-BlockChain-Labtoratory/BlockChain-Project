@@ -129,9 +129,10 @@ namespace AElf.Contracts.CRContract
             });
             var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
             var Ahashcode = Aret.CRTSet.First();
-            var dt = DateTime.Now;
+            var dt = DateTime.UtcNow;
             var currTime = Timestamp.FromDateTime(dt);
             var limit =  TExtensions.AddMinutes(currTime , 2);
+            Timestamp.FromDateTime(DateTime.Parse(s: "2021-04-22T17:27").ToUniversalTime());
             var test = await AliceCRContractStub.CR_Pledge.SendAsync(new PledgeData
             {
                 Pledgee = BobAddress,
@@ -229,6 +230,35 @@ namespace AElf.Contracts.CRContract
                 CRTID = Ahashcode
             });
             result.ShouldBe(new BoolValue{Value = false});
+            
+        }
+        
+        public async Task Authorize()
+        {
+            await UpLoad();
+            var Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            var Ahashcode = Aret.CRTSet.First();
+            
+            var test = await AliceCRContractStub.CR_Authorize.SendAsync(new AuthorizeInput(
+            {
+                CRTID = Ahashcode,
+                Addr = BobAddress,
+                Price = 10000,
+            });
+            test.Output.ShouldBe(new SInt64Value
+            {
+                Value = 0
+            });
+            
+            
+            Aret = await CRContractStub.getAllCRTs.CallAsync(AliceAddress);
+            Ahashcode = Aret.CRTSet.First();
+            var result = await CRContractStub.isApproved.CallAsync(new ApproveReqInput
+            {
+                Addr = BobAddress,
+                CRTID = Ahashcode
+            });
+            result.ShouldBe(new BoolValue{Value = true});
             
         }
     }

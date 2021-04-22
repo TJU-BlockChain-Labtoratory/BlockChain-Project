@@ -89,7 +89,7 @@ namespace AElf.Contracts.CRContract
             return 0;
         }
 
-        public int CRT_Authorize( Hash CRT_ID, CRT_Authorize_Info info )
+        public int CRT_Authorize( Hash CRT_ID, Address addr )
         {
             //验证信息
             var CRTfetch = State.CRT_Base[CRT_ID];
@@ -100,13 +100,8 @@ namespace AElf.Contracts.CRContract
                 return 2;//身份错误码2
             }
 
-            //将新授权用户加入authorize数组
-            CRTfetch.CRTAuthorized.Add( info.Authorized );
-            //将新授权信息加入Authorize_Info数组
-            CRTfetch.AuthorizeInfo.Add( info );
-            
             //to do:对账户添加CRT的信息
-
+            CRTfetch.CRTAuthorized.Add(addr);
             State.CRT_Base[CRT_ID] = CRTfetch;//更新CRT
 
             return 0;
